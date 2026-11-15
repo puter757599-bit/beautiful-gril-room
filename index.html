@@ -1,2004 +1,1132 @@
 <!DOCTYPE html>
-<html lang="zh-Hant-TW">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Atelier Wardrobe｜智慧衣櫥管理與互動穿搭模擬系統</title>
-  <!-- 載入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 載入 Google Fonts (Noto Sans TC & Cormorant Garamond) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <!-- 載入 Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Noto Sans TC"', 'sans-serif'],
-            serif: ['"Cormorant Garamond"', 'serif'],
-          },
-          colors: {
-            morandi: {
-              bg: '#F4F6FA',        // 霧藍微紫柔和背景
-              card: '#FFFFFF',      // 卡片純白
-              oat: '#ECEFF7',       // 淺霧藍灰底
-              lilacBg: '#EFEAF6',   // 淡薰衣草紫底
-              sand: '#DCE2EE',      // 藍灰細緻邊框
-              taupe: '#98A2B8',     // 靜謐藍灰
-              blue: '#5C76A8',      // 莫蘭迪霧霾靛藍 (主色)
-              blueDark: '#4A628A',  // 深霧霾藍
-              purple: '#8E7AB5',    // 莫蘭迪薰衣草紫 (輔助主色)
-              purpleDark: '#7C6A96',// 深丁香紫
-              sage: '#7A9E9F',      // 莫蘭迪藍綠
-              rose: '#C58F9E',      // 莫蘭迪藕荷粉紫
-              charcoal: '#2E3440',  // 柔炭藍黑文字
-              muted: '#6E778A',     // 次要藍灰文字
-            }
-          },
-          boxShadow: {
-            'soft': '0 8px 30px -6px rgba(74, 98, 138, 0.08)',
-            'float': '0 14px 36px -4px rgba(124, 106, 150, 0.18)',
-          }
-        }
-      }
-    };
-  </script>
-
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg-main: #F4F5FA;
+      --bg-card: #FFFFFF;
+      --primary-blue: #5C76A8;
+      --primary-purple: #8E7AB5;
+      --accent-lavender: #EAE6F3;
+      --accent-mist: #E3EAF5;
+      --text-dark: #2C3244;
+      --text-muted: #6E768D;
+      --border-soft: #DCE1EE;
+    }
     body {
-      background: linear-gradient(135deg, #F4F6FA 0%, #F6F4FA 100%);
-      color: #2E3440;
       font-family: 'Noto Sans TC', sans-serif;
-      overflow-x: hidden;
+      background-color: var(--bg-main);
+      color: var(--text-dark);
+      background-image: radial-gradient(circle at 15% 10%, rgba(142, 122, 181, 0.08) 0%, transparent 45%),
+                        radial-gradient(circle at 85% 90%, rgba(92, 118, 168, 0.08) 0%, transparent 45%);
     }
-
-    /* 自訂捲軸樣式 */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #ECEFF7;
-      border-radius: 999px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #BCC5D8;
-      border-radius: 999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #9BA8C7;
-    }
-
-    /* 棋盤格透明背景指示（用於預覽去背效果） */
-    .checkerboard-bg {
-      background-color: #ffffff;
+    .font-serif-brand { font-family: 'Playfair Display', 'Noto Sans TC', serif; }
+    .gradient-brand { background: linear-gradient(135deg, #5C76A8 0%, #8E7AB5 100%); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #C5CCE0; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #8E7AB5; }
+    .canvas-grid {
+      background-color: #FAFBFD;
       background-image: 
-        linear-gradient(45deg, #ECEFF7 25%, transparent 25%), 
-        linear-gradient(-45deg, #ECEFF7 25%, transparent 25%), 
-        linear-gradient(45deg, transparent 75%, #ECEFF7 75%), 
-        linear-gradient(-45deg, transparent 75%, #ECEFF7 75%);
-      background-size: 16px 16px;
-      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+        linear-gradient(to right, rgba(92, 118, 168, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(142, 122, 181, 0.06) 1px, transparent 1px);
+      background-size: 24px 24px;
     }
-
-    /* 穿搭畫布選取框動畫 */
     .canvas-item {
-      touch-action: none;
+      position: absolute;
+      cursor: grab;
       user-select: none;
+      touch-action: none;
       transition: box-shadow 0.15s ease;
     }
+    .canvas-item:active { cursor: grabbing; }
     .canvas-item.selected {
       outline: 2px dashed #8E7AB5;
       outline-offset: 4px;
-    }
-    .resize-handle {
-      touch-action: none;
-    }
-
-    /* 平滑進場動畫 */
-    @keyframes fadeSlideUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-up {
-      animation: fadeSlideUp 0.35s ease-out forwards;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- ==================== 頂部導覽列 ==================== -->
-  <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-morandi-sand/90">
-    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-      <!-- 品牌識別 -->
+  <!-- 頂部導覽列 -->
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#DCE1EE] px-4 lg:px-8 py-3.5 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-morandi-blue to-morandi-purple flex items-center justify-center text-white shadow-sm">
-          <i data-lucide="shirt" class="w-5 h-5"></i>
+        <div class="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center text-white shadow-md">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3a2 2 0 012 2c0 .74-.4 1.39-1 1.73V8l7.5 4.5a1.5 1.5 0 01-.77 2.79H4.27a1.5 1.5 0 01-.77-2.79L11 8V6.73A2 2 0 0112 3z"/>
+          </svg>
         </div>
         <div>
-          <div class="flex items-baseline gap-2">
-            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-morandi-charcoal">Atelier Wardrobe</h1>
-            <span class="hidden md:inline-block text-xs font-medium px-2.5 py-0.5 rounded-full bg-morandi-lilacBg text-morandi-purpleDark">智慧衣櫥與穿搭系統</span>
-          </div>
-          <p class="text-[11px] text-morandi-muted hidden sm:block">系統化盤點單品數量 · 視覺化自由搭配模擬</p>
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight text-[#2C3244] flex items-center gap-2">
+            <span class="font-serif-brand italic text-[#5C76A8]">Atelier</span> 智慧衣櫥與互動穿搭
+          </h1>
+          <p class="text-xs text-[#6E768D]">系統化單品盤點 · 智慧去背 · 雲端圖床自動同步</p>
         </div>
       </div>
 
-      <!-- 導覽操作區 -->
-      <div class="flex items-center gap-2 sm:gap-3">
-        <!-- JSON 匯入/匯出 -->
-        <button onclick="exportDataJSON()" title="匯出衣櫥備份 (.json)" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium text-morandi-charcoal bg-morandi-oat hover:bg-morandi-sand/80 transition">
-          <i data-lucide="download" class="w-4 h-4 text-morandi-blueDark"></i>
-          <span class="hidden md:inline">匯出備份</span>
+      <!-- 工具按鈕區 -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="openCloudModal()" id="cloudStatusBtn" class="px-3 py-2 rounded-xl text-xs font-medium border border-[#DCE1EE] bg-[#F4F5FA] hover:bg-[#EAE6F3] text-[#5C76A8] flex items-center gap-1.5 transition">
+          <span id="cloudDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <span id="cloudBtnText">連結雲端資料庫</span>
         </button>
-
-        <label title="匯入衣櫥資料 (.json)" class="cursor-pointer flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium text-morandi-charcoal bg-morandi-oat hover:bg-morandi-sand/80 transition">
-          <i data-lucide="upload" class="w-4 h-4 text-morandi-purpleDark"></i>
-          <span class="hidden md:inline">匯入還原</span>
-          <input type="file" id="importJsonInput" accept=".json" class="hidden" onchange="importDataJSON(event)" />
+        <button onclick="syncFromCloud(true)" id="manualSyncBtn" class="hidden px-3 py-2 rounded-xl text-xs font-medium border border-[#8E7AB5]/40 bg-[#EAE6F3]/60 hover:bg-[#EAE6F3] text-[#6B5494] flex items-center gap-1 transition" title="從 Google 試算表重新讀取最新資料">
+          🔄 重新同步
+        </button>
+        <button onclick="exportJSON()" class="px-3 py-2 rounded-xl text-xs font-medium border border-[#DCE1EE] bg-white hover:bg-slate-50 text-[#6E768D] transition">
+          匯出備份
+        </button>
+        <label class="px-3 py-2 rounded-xl text-xs font-medium border border-[#DCE1EE] bg-white hover:bg-slate-50 text-[#6E768D] cursor-pointer transition">
+          匯入備份
+          <input type="file" accept=".json" class="hidden" onchange="importJSON(event)">
         </label>
-
-        <!-- 新增衣物主按鈕 -->
-        <button onclick="openUploadModal()" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-morandi-blue to-morandi-purple hover:from-morandi-blueDark hover:to-morandi-purpleDark shadow-sm transition active:scale-95">
-          <i data-lucide="plus-circle" class="w-4 h-4"></i>
-          <span>新增衣物</span>
+        <button onclick="clearAllData()" class="px-3 py-2 rounded-xl text-xs font-medium border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-600 transition">
+          🗑️ 清空資料
+        </button>
+        <button onclick="openAddModal()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white gradient-brand shadow-md hover:opacity-95 flex items-center gap-1.5 transition">
+          <span>＋ 新增衣物</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- ==================== 主要內容區 ==================== -->
-  <main class="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+  <!-- 雲端同步狀態通知橫幅 -->
+  <div id="syncBanner" class="hidden bg-[#EAE6F3] border-b border-[#8E7AB5]/30 px-4 py-2 text-center text-xs font-medium text-[#5C4684]"></div>
 
-    <!-- 1. 衣櫥總覽與數量統計儀表板 -->
-    <section aria-label="衣櫥統計儀表板" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- 總件數卡片 -->
-      <div class="bg-white rounded-2xl p-5 border border-morandi-sand/70 shadow-soft flex items-center justify-between">
+  <!-- 主內容區 -->
+  <main class="max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 flex-1 space-y-6">
+
+    <!-- 1. 衣櫥數量與色系統計儀表板 -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div class="lg:col-span-8 bg-white rounded-2xl p-5 border border-[#DCE1EE] shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold text-[#2C3244] flex items-center gap-2">
+            <span class="w-1.5 h-4 rounded-full gradient-brand"></span>
+            衣櫥單品數量總覽（點擊類別可快速篩選）
+          </h2>
+          <span id="totalCountBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#EAE6F3] text-[#6B5494]">共 0 件單品</span>
+        </div>
+        <div id="categoryStatsGrid" class="grid grid-cols-3 sm:grid-cols-6 gap-2.5"></div>
+      </div>
+
+      <div class="lg:col-span-4 bg-white rounded-2xl p-5 border border-[#DCE1EE] shadow-sm flex flex-col justify-between">
         <div>
-          <p class="text-xs font-medium text-morandi-muted uppercase tracking-wider">衣櫥單品總數</p>
-          <div class="flex items-baseline gap-2 mt-1">
-            <span id="statTotalCount" class="text-3xl font-bold text-morandi-charcoal">0</span>
-            <span class="text-xs text-morandi-muted">件衣物</span>
-          </div>
-          <p id="statOutfitCount" class="text-xs text-morandi-purpleDark mt-1.5 flex items-center gap-1 font-medium">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-            <span>已儲存 0 套穿搭靈感</span>
-          </p>
+          <h2 class="text-sm font-bold text-[#2C3244] flex items-center gap-2 mb-3">
+            <span class="w-1.5 h-4 rounded-full bg-[#8E7AB5]"></span>
+            衣櫥色系比例分析
+          </h2>
+          <div id="colorProgressBar" class="w-full h-3.5 rounded-full bg-slate-100 overflow-hidden flex mb-3 border border-[#DCE1EE]"></div>
         </div>
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-morandi-oat to-morandi-lilacBg flex items-center justify-center text-morandi-blueDark">
-          <i data-lucide="layers" class="w-6 h-6"></i>
-        </div>
-      </div>
-
-      <!-- 各部位數量分布 -->
-      <div class="bg-white rounded-2xl p-5 border border-morandi-sand/70 shadow-soft sm:col-span-1 lg:col-span-2 flex flex-col justify-between">
-        <div class="flex items-center justify-between mb-2">
-          <p class="text-xs font-medium text-morandi-muted uppercase tracking-wider">各部位數量分布（點擊快速篩選）</p>
-          <button onclick="resetFilters()" class="text-xs text-morandi-blueDark hover:underline">顯示全部</button>
-        </div>
-        <div id="statCategoryBreakdown" class="grid grid-cols-3 sm:grid-cols-5 gap-2">
-          <!-- 由 JS 動態渲染 -->
-        </div>
-      </div>
-
-      <!-- 色系占比分析 -->
-      <div class="bg-white rounded-2xl p-5 border border-morandi-sand/70 shadow-soft flex flex-col justify-between">
-        <div class="flex items-center justify-between mb-2">
-          <p class="text-xs font-medium text-morandi-muted uppercase tracking-wider">衣櫥色系占比</p>
-          <span id="statTopColorLabel" class="text-xs font-medium text-morandi-blueDark">主力色系：-</span>
-        </div>
-        <div id="statColorBar" class="w-full h-3.5 rounded-full bg-morandi-oat overflow-hidden flex my-1.5">
-          <!-- 色條動態渲染 -->
-        </div>
-        <div id="statColorLegend" class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-morandi-muted mt-1">
-          <!-- 色系圖例動態渲染 -->
-        </div>
+        <div id="colorLegend" class="flex flex-wrap gap-2 text-xs text-[#6E768D]"></div>
       </div>
     </section>
 
-    <!-- 2. 雙欄核心工作區：左側「我的衣櫥篩選庫」 + 右側「互動穿搭試衣間畫布」 -->
+    <!-- 2. 左側衣櫥單品庫 + 右側互動穿搭試衣間 -->
     <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-      <!-- 左欄：我的衣櫥篩選庫 (佔 7 欄) -->
-      <div class="lg:col-span-7 bg-white rounded-3xl border border-morandi-sand/80 shadow-soft overflow-hidden flex flex-col">
-        <!-- 篩選區標頭 -->
-        <div class="p-5 border-b border-morandi-sand/60 bg-morandi-oat/40 space-y-3.5">
+      <!-- 左側：衣櫥單品管理庫 (7欄) -->
+      <div class="lg:col-span-7 bg-white rounded-2xl border border-[#DCE1EE] shadow-sm overflow-hidden flex flex-col">
+        <div class="p-4 border-b border-[#DCE1EE] bg-[#FAFBFD] space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+              <input type="text" id="searchInput" oninput="renderWardrobe()" placeholder="搜尋名稱、雪紡、襯衫、T恤..." class="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE1EE] bg-white focus:outline-none focus:border-[#8E7AB5]">
+            </div>
             <div class="flex items-center gap-2">
-              <i data-lucide="grid" class="w-5 h-5 text-morandi-blueDark"></i>
-              <h2 class="text-base sm:text-lg font-bold text-morandi-charcoal">我的衣櫥資料庫</h2>
-              <span id="filteredBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-white border border-morandi-sand text-morandi-muted">0 件</span>
-            </div>
-
-            <!-- 搜尋框 -->
-            <div class="relative w-full sm:w-56">
-              <i data-lucide="search" class="w-4 h-4 text-morandi-muted absolute left-3 top-1/2 -translate-y-1/2"></i>
-              <input type="text" id="searchInput" oninput="applyFilters()" placeholder="搜尋名稱、款式、備註..." class="w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm bg-white border border-morandi-sand rounded-xl focus:outline-none focus:border-morandi-blue" />
+              <select id="filterSubType" onchange="renderWardrobe()" class="px-3 py-2 text-xs rounded-xl border border-[#DCE1EE] bg-white text-[#2C3244] focus:outline-none">
+                <option value="ALL">所有細分款式</option>
+                <option value="襯衫">襯衫</option>
+                <option value="雪紡">雪紡</option>
+                <option value="T恤">T恤</option>
+                <option value="針織/毛衣">針織/毛衣</option>
+                <option value="西裝/外套">西裝/外套</option>
+                <option value="長褲">長褲</option>
+                <option value="短褲">短褲</option>
+                <option value="長裙">長裙</option>
+                <option value="短裙">短裙</option>
+                <option value="連身洋裝">連身洋裝</option>
+                <option value="鞋履/包袋">鞋履/包袋</option>
+              </select>
+              <select id="filterLength" onchange="renderWardrobe()" class="px-3 py-2 text-xs rounded-xl border border-[#DCE1EE] bg-white text-[#2C3244] focus:outline-none">
+                <option value="ALL">所有長短版型</option>
+                <option value="短版">短版</option>
+                <option value="常規/中長">常規/中長</option>
+                <option value="長版/及踝">長版/及踝</option>
+              </select>
             </div>
           </div>
 
-          <!-- 大類頁籤 (Tab) -->
-          <div id="categoryTabs" class="flex items-center gap-1.5 overflow-x-auto pb-1">
-            <!-- JS 動態生成大類按鈕 -->
-          </div>
-
-          <!-- 細分條件篩選列 (款式、長短、顏色、重置) -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <select id="filterSubCategory" onchange="applyFilters()" class="text-xs bg-white border border-morandi-sand rounded-xl px-2.5 py-2 text-morandi-charcoal focus:outline-none focus:border-morandi-blue">
-              <option value="ALL">所有細分款式</option>
-            </select>
-
-            <select id="filterLength" onchange="applyFilters()" class="text-xs bg-white border border-morandi-sand rounded-xl px-2.5 py-2 text-morandi-charcoal focus:outline-none focus:border-morandi-blue">
-              <option value="ALL">所有長短版型</option>
-            </select>
-
-            <select id="filterColor" onchange="applyFilters()" class="text-xs bg-white border border-morandi-sand rounded-xl px-2.5 py-2 text-morandi-charcoal focus:outline-none focus:border-morandi-blue">
-              <option value="ALL">所有色系</option>
-            </select>
-
-            <button onclick="resetFilters()" class="flex items-center justify-center gap-1 text-xs font-medium bg-white hover:bg-morandi-oat border border-morandi-sand rounded-xl px-2.5 py-2 text-morandi-muted hover:text-morandi-charcoal transition">
-              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-              <span>清除篩選</span>
+          <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+            <div id="colorFilterChips" class="flex items-center flex-wrap gap-1.5"></div>
+            <button onclick="loadSampleWardrobe()" class="text-[11px] font-medium text-[#5C76A8] hover:text-[#8E7AB5] underline">
+              載入藍紫範例衣物
             </button>
           </div>
         </div>
 
-        <!-- 提示操作條 -->
-        <div class="px-5 py-2 bg-gradient-to-r from-morandi-blue/10 to-morandi-purple/10 text-morandi-blueDark text-xs flex items-center justify-between">
-          <span class="flex items-center gap-1.5">
-            <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-morandi-purple"></i>
-            提示：可直接將下方衣物「拖曳」至右側試衣間，或點擊「＋加入穿搭」
-          </span>
-          <button onclick="restoreDefaultSamples()" class="underline font-medium hover:text-morandi-purpleDark shrink-0 ml-2">載入藍紫範例衣物</button>
-        </div>
-
-        <!-- 衣物卡片網格 -->
-        <div id="wardrobeGrid" class="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[680px] overflow-y-auto">
-          <!-- JS 動態生成衣物卡片 -->
+        <div class="p-4 max-h-[640px] overflow-y-auto">
+          <div id="wardrobeGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
         </div>
       </div>
 
-      <!-- 右欄：互動穿搭試衣間畫布 (佔 5 欄) -->
-      <div class="lg:col-span-5 bg-white rounded-3xl border border-morandi-sand/80 shadow-soft overflow-hidden flex flex-col">
-        <!-- 畫布頂部工具列 -->
-        <div class="p-4 border-b border-morandi-sand/60 bg-morandi-oat/50 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <i data-lucide="sparkles" class="w-5 h-5 text-morandi-purple"></i>
-            <h2 class="text-base sm:text-lg font-bold text-morandi-charcoal">互動穿搭試衣間</h2>
+      <!-- 右側：互動穿搭試衣間畫布 (5欄) -->
+      <div class="lg:col-span-5 bg-white rounded-2xl border border-[#DCE1EE] shadow-sm overflow-hidden flex flex-col">
+        <div class="p-4 border-b border-[#DCE1EE] bg-[#FAFBFD] flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-[#2C3244]">互動穿搭試衣間</h2>
+            <p class="text-[11px] text-[#6E768D]">點擊左側單品「＋加入穿搭」或直接拖曳至畫布</p>
           </div>
-
           <div class="flex items-center gap-1.5">
-            <!-- 模特兒參考線開關 -->
-            <button id="toggleSilhouetteBtn" onclick="toggleSilhouette()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-morandi-blue text-white transition" title="切換人體比例參考線">
-              <i data-lucide="user" class="w-3.5 h-3.5"></i>
-              <span>身形比例線</span>
+            <button onclick="toggleSilhouette()" id="silhouetteToggleBtn" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#EAE6F3] text-[#6B5494] hover:opacity-90 transition">
+              身形比例線：開
             </button>
-
-            <!-- 清空畫布 -->
-            <button onclick="clearCanvas()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-white border border-morandi-sand text-morandi-muted hover:text-morandi-rose hover:border-morandi-rose transition" title="清空畫布">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-              <span>清空</span>
+            <button onclick="clearCanvas()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-[#DCE1EE] text-[#6E768D] hover:bg-slate-100 transition">
+              清空
             </button>
           </div>
         </div>
 
-        <!-- 選中單品的微調控制列 (動態顯示) -->
-        <div id="canvasControlBar" class="px-4 py-2.5 bg-morandi-oat/80 border-b border-morandi-sand/60 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div id="noSelectionHint" class="text-morandi-muted flex items-center gap-1.5 py-1">
-            <i data-lucide="hand" class="w-3.5 h-3.5"></i>
-            <span>點擊畫布上的衣物可調整大小、旋轉與前後圖層順序</span>
-          </div>
-
-          <div id="activeItemControls" class="hidden w-full flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <span id="selectedItemName" class="font-semibold text-morandi-charcoal max-w-[110px] truncate">單品</span>
-              <!-- 縮放滑桿 -->
-              <label class="flex items-center gap-1 text-morandi-muted" title="縮放大小">
-                <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
-                <input type="range" id="scaleSlider" min="0.4" max="2.2" step="0.05" value="1" oninput="updateSelectedTransform()" class="w-16 accent-morandi-blue" />
-              </label>
-              <!-- 旋轉滑桿 -->
-              <label class="flex items-center gap-1 text-morandi-muted" title="旋轉角度">
-                <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
-                <input type="range" id="rotateSlider" min="-45" max="45" step="1" value="0" oninput="updateSelectedTransform()" class="w-16 accent-morandi-blue" />
-              </label>
-            </div>
-
-            <!-- 圖層與移除按鈕 -->
-            <div class="flex items-center gap-1">
-              <button onclick="changeLayerOrder('top')" class="px-1.5 py-1 rounded-lg bg-white border border-morandi-sand hover:bg-morandi-purple hover:text-white text-[11px] font-medium transition" title="移至最頂層">
-                置頂
-              </button>
-              <button onclick="changeLayerOrder('up')" class="p-1.5 rounded-lg bg-white border border-morandi-sand hover:bg-morandi-blue hover:text-white transition" title="上移一層（穿在外面）">
-                <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i>
-              </button>
-              <button onclick="changeLayerOrder('down')" class="p-1.5 rounded-lg bg-white border border-morandi-sand hover:bg-morandi-blue hover:text-white transition" title="下移一層（紮進裡面）">
-                <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
-              </button>
-              <button onclick="changeLayerOrder('bottom')" class="px-1.5 py-1 rounded-lg bg-white border border-morandi-sand hover:bg-morandi-purple hover:text-white text-[11px] font-medium transition" title="移至最底層">
-                置底
-              </button>
-              <button onclick="removeSelectedCanvasItem()" class="p-1.5 rounded-lg bg-white border border-morandi-sand text-morandi-rose hover:bg-morandi-rose hover:text-white transition" title="移除此單品">
-                <i data-lucide="x" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 互動穿搭畫布本體 (支援 Drag & Drop 放入) -->
-        <div class="p-4 bg-gradient-to-b from-[#F5F7FC] to-[#EFEBF6] flex justify-center">
+        <div class="p-4 flex flex-col items-center">
           <div id="fittingCanvas"
-               ondragover="handleCanvasDragOver(event)"
-               ondragleave="handleCanvasDragLeave(event)"
+               ondragover="event.preventDefault()"
                ondrop="handleCanvasDrop(event)"
-               onpointerdown="deselectCanvasItem(event)"
-               class="relative w-full max-w-[420px] h-[520px] rounded-2xl bg-white border-2 border-dashed border-morandi-sand shadow-inner overflow-hidden transition-colors">
+               onclick="deselectAllCanvasItems(event)"
+               class="relative w-full h-[460px] rounded-2xl border-2 border-dashed border-[#C7D0E6] canvas-grid overflow-hidden shadow-inner">
+            
+            <svg id="silhouetteGuide" class="absolute inset-0 w-full h-full pointer-events-none opacity-45" viewBox="0 0 300 460" preserveAspectRatio="xMidYMid meet">
+              <g stroke="#7A89B8" stroke-width="1" stroke-dasharray="4 4" fill="none">
+                <circle cx="150" cy="42" r="18" />
+                <path d="M142 60 L142 74 L102 88 L95 190" />
+                <path d="M158 60 L158 74 L198 88 L205 190" />
+                <path d="M114 88 L124 175 L108 235 L118 425" />
+                <path d="M186 88 L176 175 L192 235 L182 425" />
+                <path d="M150 235 L145 425" />
+                <path d="M150 235 L155 425" />
+                <line x1="40" y1="88" x2="260" y2="88" stroke-opacity="0.5" />
+                <line x1="40" y1="175" x2="260" y2="175" stroke-opacity="0.5" />
+                <line x1="40" y1="235" x2="260" y2="235" stroke-opacity="0.5" />
+                <line x1="40" y1="335" x2="260" y2="335" stroke-opacity="0.5" />
+              </g>
+              <g fill="#6E768D" font-size="9" font-family="sans-serif">
+                <text x="12" y="85">肩線</text>
+                <text x="12" y="172">腰線</text>
+                <text x="12" y="232">臀線</text>
+                <text x="12" y="332">膝蓋</text>
+              </g>
+            </svg>
 
-            <!-- 極簡模特兒身形比例參考線框 (SVG - 霧藍薰衣草灰紫線條) -->
-            <div id="silhouetteOverlay" class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-75 transition-opacity duration-300">
-              <svg viewBox="0 0 300 480" class="w-full h-full">
-                <!-- 中心垂直軸線 -->
-                <line x1="150" y1="20" x2="150" y2="460" stroke="#CBD2E6" stroke-width="1" stroke-dasharray="4 4" />
-                
-                <!-- 比例水平輔助線與標籤 -->
-                <!-- 肩線 -->
-                <line x1="25" y1="95" x2="275" y2="95" stroke="#D7DDF0" stroke-width="1" stroke-dasharray="3 3" />
-                <text x="12" y="92" fill="#8C99BD" font-size="9" font-family="Noto Sans TC">肩線</text>
-
-                <!-- 腰線 -->
-                <line x1="25" y1="185" x2="275" y2="185" stroke="#C5CEEA" stroke-width="1" stroke-dasharray="3 3" />
-                <text x="12" y="182" fill="#8C99BD" font-size="9" font-family="Noto Sans TC">腰線</text>
-
-                <!-- 臀線 -->
-                <line x1="25" y1="240" x2="275" y2="240" stroke="#D7DDF0" stroke-width="1" stroke-dasharray="3 3" />
-                <text x="12" y="237" fill="#8C99BD" font-size="9" font-family="Noto Sans TC">臀線</text>
-
-                <!-- 膝蓋線 -->
-                <line x1="25" y1="345" x2="275" y2="345" stroke="#D7DDF0" stroke-width="1" stroke-dasharray="3 3" />
-                <text x="12" y="342" fill="#8C99BD" font-size="9" font-family="Noto Sans TC">膝蓋</text>
-
-                <!-- 腳踝線 -->
-                <line x1="25" y1="435" x2="275" y2="435" stroke="#D7DDF0" stroke-width="1" stroke-dasharray="3 3" />
-                <text x="12" y="432" fill="#8C99BD" font-size="9" font-family="Noto Sans TC">腳踝</text>
-
-                <!-- 極簡優雅人體輪廓線稿 -->
-                <g fill="none" stroke="#9BA8C7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <!-- 頭部與頸部 -->
-                  <ellipse cx="150" cy="48" rx="18" ry="23" />
-                  <path d="M142 70 L142 86 Q150 90 158 86 L158 70" />
-                  <!-- 肩膀與手臂 -->
-                  <path d="M142 86 Q112 90 102 104 L88 215 Q87 224 93 225 Q99 224 103 212 L114 128" />
-                  <path d="M158 86 Q188 90 198 104 L212 215 Q213 224 207 225 Q201 224 197 212 L186 128" />
-                  <!-- 軀幹 (胸-腰-臀) -->
-                  <path d="M114 128 Q122 162 125 185 Q113 212 115 242" />
-                  <path d="M186 128 Q178 162 175 185 Q187 212 185 242" />
-                  <!-- 雙腿 -->
-                  <path d="M115 242 L123 345 L128 435 L120 452 L136 452 L138 435 L147 345 L150 258" />
-                  <path d="M185 242 L177 345 L172 435 L180 452 L164 452 L162 435 L153 345 L150 258" />
-                </g>
-              </svg>
-            </div>
-
-            <!-- 空畫布引導文字 -->
-            <div id="emptyCanvasGuide" class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center text-center p-6">
-              <div class="w-12 h-12 rounded-full bg-morandi-oat/90 flex items-center justify-center text-morandi-blueDark mb-2 shadow-sm">
-                <i data-lucide="move" class="w-5 h-5"></i>
-              </div>
-              <p class="text-sm font-medium text-morandi-charcoal/80">將左側衣物拖拉至此處</p>
-              <p class="text-xs text-morandi-muted mt-1">自由疊加外套、上衣與下身，確認比例與配色</p>
-            </div>
-
-            <!-- 畫布上的衣物圖層容器 -->
             <div id="canvasItemsLayer" class="absolute inset-0"></div>
           </div>
-        </div>
 
-        <!-- 畫布底部儲存穿搭表單 -->
-        <div class="p-4 border-t border-morandi-sand/60 bg-white flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <input type="text" id="outfitNameInput" placeholder="為此套穿搭命名（例：靜謐霧藍約會風）" class="flex-1 text-xs sm:text-sm bg-morandi-oat/60 border border-morandi-sand rounded-xl px-3 py-2 focus:outline-none focus:border-morandi-purple" />
-          <button onclick="openSaveOutfitModal()" class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-morandi-blue to-morandi-purple hover:from-morandi-blueDark hover:to-morandi-purpleDark transition shadow-sm shrink-0">
-            <i data-lucide="bookmark-check" class="w-4 h-4"></i>
-            <span>儲存此套穿搭</span>
-          </button>
+          <div id="itemControlsBar" class="w-full mt-3 p-3 rounded-xl bg-[#F4F5FA] border border-[#DCE1EE] flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span id="selectedItemLabel" class="text-[#6E768D] font-medium">點選畫布上的衣物可調整大小、旋轉與前後圖層</span>
+            <div id="selectedItemActions" class="hidden flex items-center gap-1.5">
+              <button onclick="adjustSelected('scale', 0.1)" class="px-2 py-1 rounded bg-white border border-[#DCE1EE] hover:bg-[#EAE6F3]">放大＋</button>
+              <button onclick="adjustSelected('scale', -0.1)" class="px-2 py-1 rounded bg-white border border-[#DCE1EE] hover:bg-[#EAE6F3]">縮小－</button>
+              <button onclick="adjustSelected('rotate', -10)" class="px-2 py-1 rounded bg-white border border-[#DCE1EE] hover:bg-[#EAE6F3]">↺</button>
+              <button onclick="adjustSelected('rotate', 10)" class="px-2 py-1 rounded bg-white border border-[#DCE1EE] hover:bg-[#EAE6F3]">↻</button>
+              <button onclick="adjustSelected('z', 1)" class="px-2 py-1 rounded bg-white border border-[#DCE1EE] hover:bg-[#EAE6F3]">上移</button>
+              <button onclick="adjustSelected('z', -1)" class="px-2 py-1 rounded bg-white border border-[#DCE1EE] hover:bg-[#EAE6F3]">下移</button>
+              <button onclick="removeSelectedCanvasItem()" class="px-2 py-1 rounded bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100">移除</button>
+            </div>
+          </div>
+
+          <div class="w-full mt-3 flex items-center gap-2">
+            <input type="text" id="outfitTitleInput" placeholder="輸入穿搭名稱（例：週一開會霧藍雪紡風）" class="flex-1 px-3 py-2 text-xs rounded-xl border border-[#DCE1EE] focus:outline-none focus:border-[#8E7AB5]">
+            <button onclick="saveCurrentOutfit()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white gradient-brand shadow hover:opacity-95 whitespace-nowrap">
+              💾 儲存此套穿搭
+            </button>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- 3. 已儲存穿搭靈感簿 (Lookbook Gallery) -->
-    <section class="bg-white rounded-3xl border border-morandi-sand/80 shadow-soft p-5 sm:p-6">
-      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-morandi-lilacBg flex items-center justify-center text-morandi-purpleDark">
-            <i data-lucide="book-open" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <h2 class="text-base sm:text-lg font-bold text-morandi-charcoal">已儲存穿搭靈感簿 (Lookbook)</h2>
-            <p class="text-xs text-morandi-muted">隨時載入重新微調、下載搭配圖卡，建立專屬的膠囊衣櫥指南</p>
-          </div>
-        </div>
-        <span id="lookbookBadge" class="text-xs font-medium px-3 py-1 rounded-full bg-morandi-lilacBg text-morandi-purpleDark">共 0 套造型</span>
+    <!-- 3. 已儲存穿搭靈感簿 -->
+    <section class="bg-white rounded-2xl p-5 border border-[#DCE1EE] shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-bold text-[#2C3244] flex items-center gap-2">
+          <span class="w-1.5 h-4 rounded-full gradient-brand"></span>
+          已儲存穿搭靈感簿（Lookbook）
+        </h2>
+        <span id="outfitCountBadge" class="text-xs text-[#6E768D]">共 0 套搭配</span>
       </div>
-
-      <div id="lookbookGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <!-- JS 動態生成已儲存穿搭 -->
-      </div>
+      <div id="lookbookGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"></div>
     </section>
+
   </main>
 
-  <!-- ==================== 彈窗 1：新增 / 編輯衣物 ==================== -->
-  <div id="itemModal" class="fixed inset-0 z-50 hidden bg-morandi-charcoal/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-float border border-morandi-sand overflow-hidden my-auto animate-fade-up">
-      <!-- 標題列 -->
-      <div class="px-6 py-4 bg-morandi-oat/60 border-b border-morandi-sand flex items-center justify-between">
-        <h3 id="itemModalTitle" class="text-lg font-bold text-morandi-charcoal flex items-center gap-2">
-          <i data-lucide="shirt" class="w-5 h-5 text-morandi-blueDark"></i>
-          <span>新增衣物單品</span>
-        </h3>
-        <button onclick="closeItemModal()" class="p-1.5 rounded-xl text-morandi-muted hover:bg-white hover:text-morandi-charcoal transition">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
+  <!-- 新增衣物彈窗 -->
+  <div id="addModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 border border-[#DCE1EE] shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-[#DCE1EE] pb-3">
+        <h3 class="text-base font-bold text-[#2C3244]">新增衣物單品（自動智慧去背並同步雲端）</h3>
+        <button onclick="closeAddModal()" class="text-[#6E768D] hover:text-[#2C3244] text-lg">✕</button>
       </div>
 
-      <!-- 表單內容 -->
-      <div class="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-        <input type="hidden" id="editItemId" value="" />
-
-        <!-- 圖片上傳與自動去背區 -->
-        <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-          <!-- 拖曳上傳框 -->
-          <div class="sm:col-span-7">
-            <label id="dropUploadZone"
-                   ondragover="event.preventDefault(); this.classList.add('border-morandi-blue', 'bg-morandi-blue/5')"
-                   ondragleave="this.classList.remove('border-morandi-blue', 'bg-morandi-blue/5')"
-                   ondrop="handleModalImageDrop(event)"
-                   class="cursor-pointer flex flex-col items-center justify-center h-44 rounded-2xl border-2 border-dashed border-morandi-sand hover:border-morandi-blue bg-morandi-oat/30 transition p-4 text-center">
-              <i data-lucide="image-plus" class="w-8 h-8 text-morandi-blueDark mb-2"></i>
-              <p class="text-xs sm:text-sm font-medium text-morandi-charcoal">點擊選擇圖片，或將照片拖曳至此</p>
-              <p class="text-[11px] text-morandi-muted mt-1">支援 JPG / PNG / WebP（支援一次選取多張批次上傳）</p>
-              <input type="file" id="itemImageInput" accept="image/*" multiple class="hidden" onchange="handleImageUpload(event)" />
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold mb-1 text-[#2C3244]">1. 上傳衣物照片（支援白底/淺底自動透明去背）</label>
+          <input type="file" id="itemImageInput" accept="image/*" onchange="handleImageUpload(event)" class="w-full p-2 border border-dashed border-[#8E7AB5] rounded-xl bg-[#FAFBFD]">
+          <div class="mt-2 flex items-center gap-3">
+            <div class="w-24 h-24 rounded-xl border border-[#DCE1EE] canvas-grid flex items-center justify-center overflow-hidden">
+              <img id="previewProcessedImg" class="max-w-full max-h-full object-contain hidden">
+              <span id="previewPlaceholder" class="text-[11px] text-[#6E768D]">預覽區</span>
+            </div>
+            <label class="flex items-center gap-2 cursor-pointer text-[#6E768D]">
+              <input type="checkbox" id="autoRemoveBgCheck" checked onchange="reprocessPreviewImage()" class="accent-[#8E7AB5]">
+              啟用淺色背景自動透明化（方便疊加穿搭）
             </label>
-
-            <!-- 自動去背開關 -->
-            <div class="mt-3 flex items-center justify-between bg-morandi-oat/60 px-3.5 py-2.5 rounded-xl border border-morandi-sand/60">
-              <div class="flex items-center gap-2">
-                <i data-lucide="wand-2" class="w-4 h-4 text-morandi-blueDark"></i>
-                <div>
-                  <p class="text-xs font-semibold text-morandi-charcoal">智慧自動去背（淺色/白底透明化）</p>
-                  <p class="text-[10px] text-morandi-muted">讓衣服在試衣間疊加時更自然不遮擋</p>
-                </div>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="autoRemoveBgToggle" checked onchange="reprocessCurrentPreview()" class="sr-only peer" />
-                <div class="w-9 h-5 bg-morandi-sand peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-morandi-blue"></div>
-              </label>
-            </div>
-          </div>
-
-          <!-- 預覽縮圖框 -->
-          <div class="sm:col-span-5 flex flex-col items-center">
-            <div class="w-full h-44 rounded-2xl border border-morandi-sand checkerboard-bg flex items-center justify-center p-3 overflow-hidden relative">
-              <img id="previewClothImg" src="" alt="預覽圖" class="max-h-full max-w-full object-contain hidden" />
-              <span id="previewPlaceholderText" class="text-xs text-morandi-muted">尚無圖片預覽</span>
-              <span id="batchCountBadge" class="hidden absolute top-2 right-2 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-morandi-blue text-white">已選 1 張</span>
-            </div>
-            <p class="text-[11px] text-morandi-muted mt-1.5">棋盤格區域代表透明背景</p>
           </div>
         </div>
 
-        <!-- 衣物名稱 -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold mb-1">單品名稱</label>
+            <input type="text" id="itemNameInput" placeholder="例：薰衣草紫雪紡襯衫" class="w-full px-3 py-2 rounded-xl border border-[#DCE1EE]">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">部位大類</label>
+            <select id="itemCategoryInput" class="w-full px-3 py-2 rounded-xl border border-[#DCE1EE]">
+              <option value="上身">上身</option>
+              <option value="下身">下身</option>
+              <option value="連身">連身</option>
+              <option value="外套">外套</option>
+              <option value="鞋包配件">鞋包配件</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold mb-1">細分材質/款式</label>
+            <select id="itemSubTypeInput" class="w-full px-3 py-2 rounded-xl border border-[#DCE1EE]">
+              <option value="襯衫">襯衫</option>
+              <option value="雪紡">雪紡</option>
+              <option value="T恤">T恤</option>
+              <option value="針織/毛衣">針織/毛衣</option>
+              <option value="西裝/外套">西裝/外套</option>
+              <option value="長褲">長褲</option>
+              <option value="短褲">短褲</option>
+              <option value="長裙">長裙</option>
+              <option value="短裙">短裙</option>
+              <option value="連身洋裝">連身洋裝</option>
+              <option value="鞋履/包袋">鞋履/包袋</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">長短版型</label>
+            <select id="itemLengthInput" class="w-full px-3 py-2 rounded-xl border border-[#DCE1EE]">
+              <option value="常規/中長">常規/中長</option>
+              <option value="短版">短版</option>
+              <option value="長版/及踝">長版/及踝</option>
+            </select>
+          </div>
+        </div>
+
         <div>
-          <label class="block text-xs font-semibold text-morandi-charcoal mb-1">衣物名稱 / 備註標籤 *</label>
-          <input type="text" id="itemNameInput" placeholder="例：法式V領雪紡襯衫（批次上傳時會自動編號）" class="w-full text-sm bg-morandi-oat/40 border border-morandi-sand rounded-xl px-3.5 py-2 focus:outline-none focus:border-morandi-blue" />
-        </div>
-
-        <!-- 多維度分類標籤 -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-morandi-charcoal mb-1">1. 大類（部位）*</label>
-            <select id="itemCategorySelect" onchange="updateModalSubCategories()" class="w-full text-sm bg-white border border-morandi-sand rounded-xl px-3 py-2 focus:outline-none focus:border-morandi-blue">
-              <!-- JS 填充 -->
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-morandi-charcoal mb-1">2. 細分款式 *</label>
-            <select id="itemSubCategorySelect" class="w-full text-sm bg-white border border-morandi-sand rounded-xl px-3 py-2 focus:outline-none focus:border-morandi-blue">
-              <!-- JS 填充 -->
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-morandi-charcoal mb-1">3. 長短版型 *</label>
-            <select id="itemLengthSelect" class="w-full text-sm bg-white border border-morandi-sand rounded-xl px-3 py-2 focus:outline-none focus:border-morandi-blue">
-              <!-- JS 填充 -->
-            </select>
-        <!-- 4. 色系標籤（視覺色票選擇器 - 擴充藍紫色系） -->
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="block text-xs font-semibold text-morandi-charcoal">4. 主色系標籤 *（含多層次藍紫色系）</label>
-            <span class="text-[11px] text-morandi-purpleDark font-medium">已選：<span id="selectedColorPreviewText">霧霾藍</span></span>
-          </div>
-          <div id="colorSwatchPicker" class="grid grid-cols-3 sm:grid-cols-5 gap-2">
-            <!-- JS 填充視覺色票按鈕 -->
-          </div>
-        </div>
-
-        <!-- 5. 季節與場合（選填） -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-          <div>
-            <label class="block text-xs font-semibold text-morandi-charcoal mb-1">5. 適用季節（選填）</label>
-            <select id="itemSeasonSelect" class="w-full text-sm bg-white border border-morandi-sand rounded-xl px-3 py-2 focus:outline-none focus:border-morandi-blue">
-              <option value="四季皆宜">四季皆宜</option>
-              <option value="春夏">春夏</option>
-              <option value="秋冬">秋冬</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-morandi-charcoal mb-1">6. 穿搭場合（選填）</label>
-            <select id="itemOccasionSelect" class="w-full text-sm bg-white border border-morandi-sand rounded-xl px-3 py-2 focus:outline-none focus:border-morandi-blue">
-              <option value="休閒日常">休閒日常</option>
-              <option value="上班正式">上班正式</option>
-              <option value="約會聚餐">約會聚餐</option>
-            </select>
-          </div>
+          <label class="block font-semibold mb-1.5">主要色系標籤（豐富藍紫與基礎色票）</label>
+          <div id="modalColorPicker" class="grid grid-cols-4 sm:grid-cols-6 gap-2"></div>
         </div>
       </div>
 
-      <!-- 底部按鈕 -->
-      <div class="px-6 py-4 bg-morandi-oat/40 border-t border-morandi-sand flex items-center justify-end gap-2">
-        <button onclick="closeItemModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-morandi-muted hover:bg-white transition">取消</button>
-        <button onclick="saveWardrobeItem()" class="px-5 py-2 rounded-xl text-sm font-semibold text-white bg-morandi-blue hover:bg-morandi-blueDark shadow-sm transition">儲存至衣櫥</button>
+      <div class="flex justify-end gap-2 pt-3 border-t border-[#DCE1EE]">
+        <button onclick="closeAddModal()" class="px-4 py-2 rounded-xl text-xs border border-[#DCE1EE] text-[#6E768D]">取消</button>
+        <button id="confirmAddBtn" onclick="confirmAddItem()" class="px-5 py-2 rounded-xl text-xs font-semibold text-white gradient-brand shadow">加入衣櫥並同步雲端</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== 彈窗 2：儲存穿搭確認 ==================== -->
-  <div id="saveOutfitModal" class="fixed inset-0 z-50 hidden bg-morandi-charcoal/50 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full shadow-float border border-morandi-sand overflow-hidden animate-fade-up">
-      <div class="px-6 py-4 bg-morandi-oat/60 border-b border-morandi-sand flex items-center justify-between">
-        <h3 class="text-base font-bold text-morandi-charcoal flex items-center gap-2">
-          <i data-lucide="bookmark-check" class="w-5 h-5 text-morandi-purple"></i>
-          <span>儲存穿搭靈感</span>
-        </h3>
-        <button onclick="closeSaveOutfitModal()" class="p-1 rounded-lg text-morandi-muted hover:text-morandi-charcoal">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
+  <!-- 雲端同步設定彈窗 -->
+  <div id="cloudModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 border border-[#DCE1EE] shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-[#DCE1EE] pb-3">
+        <h3 class="text-base font-bold text-[#2C3244]">☁️ 連結 Google 雲端資料庫與圖床</h3>
+        <button onclick="closeCloudModal()" class="text-[#6E768D] hover:text-[#2C3244] text-lg">✕</button>
       </div>
-      <div class="p-6 space-y-4">
+      <div class="space-y-3 text-xs text-[#6E768D]">
+        <p class="leading-relaxed">貼上您的 Google Apps Script 部署網址（結尾為 <code class="bg-slate-100 px-1 rounded">/exec</code>）。連結成功後，您上傳的每張衣物照片都會自動存入 Google 雲端硬碟並同步至 Google 試算表。</p>
         <div>
-          <label class="block text-xs font-semibold text-morandi-charcoal mb-1">穿搭造型名稱 *</label>
-          <input type="text" id="modalOutfitTitle" placeholder="例：週一會議知性藍紫風" class="w-full text-sm bg-morandi-oat/40 border border-morandi-sand rounded-xl px-3.5 py-2 focus:outline-none focus:border-morandi-purple" />
+          <label class="block font-semibold text-[#2C3244] mb-1">Apps Script 網頁應用程式網址</label>
+          <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/...../exec" class="w-full px-3 py-2 rounded-xl border border-[#DCE1EE] text-[#2C3244] focus:outline-none focus:border-[#8E7AB5]">
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-morandi-charcoal mb-1">搭配心得 / 備註（選填）</label>
-          <textarea id="modalOutfitNote" rows="2" placeholder="記錄這套穿搭的場合、配件建議或天氣溫度..." class="w-full text-sm bg-morandi-oat/40 border border-morandi-sand rounded-xl px-3.5 py-2 focus:outline-none focus:border-morandi-purple"></textarea>
-        </div>
+        <div id="cloudSyncMessage" class="text-[11px] font-medium text-[#5C76A8]"></div>
       </div>
-      <div class="px-6 py-4 bg-morandi-oat/40 border-t border-morandi-sand flex justify-end gap-2">
-        <button onclick="closeSaveOutfitModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-morandi-muted hover:bg-white">取消</button>
-        <button onclick="confirmSaveOutfit()" class="px-5 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-morandi-blue to-morandi-purple hover:from-morandi-blueDark hover:to-morandi-purpleDark shadow-sm">確認儲存</button>
+      <div class="flex justify-between items-center pt-3 border-t border-[#DCE1EE]">
+        <button onclick="disconnectCloud()" class="text-xs text-rose-500 hover:underline">中斷連結</button>
+        <div class="flex gap-2">
+          <button onclick="closeCloudModal()" class="px-4 py-2 rounded-xl text-xs border border-[#DCE1EE]">關閉</button>
+          <button onclick="saveCloudUrlAndSync()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white gradient-brand shadow">儲存並連線同步</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ==================== 輕提示訊息條 (Toast) ==================== -->
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-  <!-- ==================== JavaScript 核心邏輯 ==================== -->
   <script>
-    // ==========================================
-    // 1. 系統常數與分類字典定義
-    // ==========================================
-    const STORAGE_KEY_ITEMS = 'atelier_wardrobe_items_v1';
-    const STORAGE_KEY_OUTFITS = 'atelier_wardrobe_outfits_v1';
-
-    const CATEGORIES = ['上身', '下身', '連身/套裝', '外套', '鞋包配件'];
-
-    const SUB_CATEGORIES_MAP = {
-      '上身': ['襯衫', '雪紡', 'T恤', '針織/毛衣', '背心/小可愛'],
-      '下身': ['長褲', '短褲', '長裙', '短裙', '牛仔褲'],
-      '連身/套裝': ['洋裝', '連身褲', '兩件式套裝'],
-      '外套': ['西裝外套', '風衣/大衣', '針織開襟衫', '夾克/牛仔外套'],
-      '鞋包配件': ['跟鞋/樂福鞋', '休閒鞋/靴子', '托特/肩背包', '腰帶/絲巾配件']
-    };
-
-    const ALL_SUB_CATEGORIES = Array.from(new Set(Object.values(SUB_CATEGORIES_MAP).flat()));
-
-    const LENGTH_TYPES = ['短版', '常規', '中長版', '長版'];
-
-    // 擴充豐富的莫蘭迪藍紫色系與基礎百搭色票
     const COLOR_PALETTE = [
-      { name: '霧霾藍', hex: '#7A99B8', border: '#5D7C9C' },
-      { name: '天青藍', hex: '#8EC3E6', border: '#6BA6CC' },
-      { name: '丹寧藍', hex: '#4E6E99', border: '#38547A' },
-      { name: '藏青/深海藍', hex: '#263859', border: '#18253D' },
-      { name: '薰衣草紫', hex: '#A899C9', border: '#8978AD' },
-      { name: '丁香紫', hex: '#C5B4E3', border: '#A591C7' },
-      { name: '藕荷紫', hex: '#9D819E', border: '#806482' },
-      { name: '深葡萄紫', hex: '#5C436E', border: '#422E52' },
-      { name: '純白', hex: '#FFFFFF', border: '#CBD2E0' },
-      { name: '燕麥米', hex: '#EAE3D5', border: '#CFC5B2' },
-      { name: '淺灰', hex: '#C4C7CE', border: '#A3A7B0' },
-      { name: '炭黑', hex: '#2D3138', border: '#1A1D21' },
-      { name: '莫蘭迪粉', hex: '#D9A7B0', border: '#BA8690' },
-      { name: '鼠尾草綠', hex: '#8FA893', border: '#718A75' },
-      { name: '大地駝', hex: '#B89B7A', border: '#997D5E' }
+      { name: '霧霾藍', hex: '#6B88B8' },
+      { name: '天青藍', hex: '#8EB8E5' },
+      { name: '丹寧藍', hex: '#4B6587' },
+      { name: '藏青藍', hex: '#26355D' },
+      { name: '薰衣草紫', hex: '#9D8EC7' },
+      { name: '丁香紫', hex: '#C3B1E1' },
+      { name: '藕荷紫', hex: '#B497BD' },
+      { name: '深葡萄紫', hex: '#5D3A6A' },
+      { name: '純淨白', hex: '#F8F9FA' },
+      { name: '燕麥米', hex: '#E6DEC8' },
+      { name: '靜謐灰', hex: '#9AA3B2' },
+      { name: '曜石黑', hex: '#2D3139' }
     ];
 
-    // ==========================================
-    // 2. 全域狀態變數
-    // ==========================================
-    let wardrobeItems = [];
-    let savedOutfits = [];
-    let activeCategoryTab = 'ALL';
+    const CATEGORIES = ['上身', '下身', '連身', '外套', '鞋包配件'];
+
+    let wardrobe = JSON.parse(localStorage.getItem('atelier_wardrobe_v2') || '[]');
+    let outfits = JSON.parse(localStorage.getItem('atelier_outfits_v2') || '[]');
+    let gasUrl = localStorage.getItem('atelier_gas_url') || '';
+
+    let activeCategoryFilter = 'ALL';
+    let activeColorFilter = 'ALL';
+    let selectedModalColor = COLOR_PALETTE[0];
+    let rawUploadedDataUrl = '';
+    let processedUploadedDataUrl = '';
+
+    let canvasItems = [];
+    let selectedCanvasItemId = null;
     let showSilhouette = true;
 
-    // 畫布上的衣物圖層狀態
-    // 格式: { instanceId, itemId, name, image, x, y, width, scale, rotation, zIndex }
-    let canvasItems = [];
-    let selectedInstanceId = null;
-
-    // 彈窗暫存圖片資料（支援單張或多張批次上傳）
-    let pendingUploadImages = []; // [{ rawDataUrl, processedDataUrl, originalName }]
-    let selectedModalColor = '霧霾藍';
-
-    // ==========================================
-    // 3. 內建精美 SVG 預設衣物生成器 (藍紫色系美學衣櫥)
-    // ==========================================
-    function svgToDataUrl(svgString) {
-      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString.trim());
-    }
-
-    function createDefaultSamples() {
-      return [
-        {
-          id: 'sample_1',
-          name: '霧霾藍法式V領雪紡襯衫',
-          category: '上身',
-          subCategory: '雪紡',
-          length: '常規',
-          color: '霧霾藍',
-          season: '春夏',
-          occasion: '上班正式',
-          image: svgToDataUrl(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
-              <defs>
-                <linearGradient id="mistyBlueChiffon" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#96B3D0"/>
-                  <stop offset="100%" stop-color="#7A99B8"/>
-                </linearGradient>
-              </defs>
-              <!-- 襯衫主體 -->
-              <path d="M82 36 L104 30 L120 68 L136 30 L158 36 L206 66 L192 146 L168 140 L166 206 Q120 214 74 206 L72 140 L48 146 L34 66 Z" fill="url(#mistyBlueChiffon)" stroke="#5D7C9C" stroke-width="2.5" stroke-linejoin="round"/>
-              <!-- V領翻領細節 -->
-              <path d="M104 30 L94 64 L120 74 L146 64 L136 30" fill="none" stroke="#DCE7F2" stroke-width="2"/>
-              <!-- 門襟與珍珠鈕扣 -->
-              <line x1="120" y1="74" x2="120" y2="208" stroke="#5D7C9C" stroke-width="1.5"/>
-              <circle cx="120" cy="96" r="2.8" fill="#F4F6FA"/>
-              <circle cx="120" cy="126" r="2.8" fill="#F4F6FA"/>
-              <circle cx="120" cy="156" r="2.8" fill="#F4F6FA"/>
-              <!-- 雪紡垂墜褶皺線 -->
-              <path d="M92 85 Q90 140 88 195" fill="none" stroke="#B4CBE0" stroke-width="1.5"/>
-              <path d="M148 85 Q150 140 152 195" fill="none" stroke="#B4CBE0" stroke-width="1.5"/>
-            </svg>
-          `)
-        },
-        {
-          id: 'sample_2',
-          name: '丹寧藍高腰直筒長褲',
-          category: '下身',
-          subCategory: '牛仔褲',
-          length: '長版',
-          color: '丹寧藍',
-          season: '四季皆宜',
-          occasion: '休閒日常',
-          image: svgToDataUrl(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280">
-              <defs>
-                <linearGradient id="denimPant" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#5B7CA8"/>
-                  <stop offset="100%" stop-color="#44628A"/>
-                </linearGradient>
-              </defs>
-              <!-- 褲頭與褲管 -->
-              <path d="M76 22 L164 22 L174 96 L168 258 L130 258 L120 112 L110 258 L72 258 L66 96 Z" fill="url(#denimPant)" stroke="#314969" stroke-width="2.5" stroke-linejoin="round"/>
-              <!-- 高腰褲頭線 -->
-              <line x1="75" y1="36" x2="165" y2="36" stroke="#85A2C9" stroke-width="2"/>
-              <circle cx="120" cy="29" r="3" fill="#D5DFED"/>
-              <!-- 丹寧車縫中線 -->
-              <line x1="94" y1="52" x2="91" y2="250" stroke="#7A9AC4" stroke-width="1.6" stroke-dasharray="4 2"/>
-              <line x1="146" y1="52" x2="149" y2="250" stroke="#7A9AC4" stroke-width="1.6" stroke-dasharray="4 2"/>
-            </svg>
-          `)
-        },
-        {
-          id: 'sample_3',
-          name: '薰衣草紫柔霧針織開襟衫',
-          category: '外套',
-          subCategory: '針織開襟衫',
-          length: '常規',
-          color: '薰衣草紫',
-          season: '秋冬',
-          occasion: '約會聚餐',
-          image: svgToDataUrl(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
-              <defs>
-                <linearGradient id="lavenderKnit" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#B9ACE0"/>
-                  <stop offset="100%" stop-color="#9E8EC4"/>
-                </linearGradient>
-              </defs>
-              <!-- 開襟衫輪廓 -->
-              <path d="M80 34 L102 28 L120 76 L138 28 L160 34 L204 68 L194 196 L172 196 L168 104 L166 204 L74 204 L72 104 L68 196 L46 196 L36 68 Z" fill="url(#lavenderKnit)" stroke="#7F6EA6" stroke-width="2.5" stroke-linejoin="round"/>
-              <!-- 羅紋門襟與下擺 -->
-              <line x1="120" y1="76" x2="120" y2="204" stroke="#7F6EA6" stroke-width="2"/>
-              <line x1="74" y1="190" x2="166" y2="190" stroke="#7F6EA6" stroke-width="1.5" stroke-dasharray="3 2"/>
-              <!-- 珠光紫鈕扣 -->
-              <circle cx="120" cy="98" r="3.5" fill="#F2EEF9"/>
-              <circle cx="120" cy="130" r="3.5" fill="#F2EEF9"/>
-              <circle cx="120" cy="162" r="3.5" fill="#F2EEF9"/>
-            </svg>
-          `)
-        },
-        {
-          id: 'sample_4',
-          name: '丁香紫垂墜百褶長裙',
-          category: '下身',
-          subCategory: '長裙',
-          length: '長版',
-          color: '丁香紫',
-          season: '四季皆宜',
-          occasion: '約會聚餐',
-          image: svgToDataUrl(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 260">
-              <defs>
-                <linearGradient id="lilacSkirt" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#D2C4EB"/>
-                  <stop offset="100%" stop-color="#B6A3DA"/>
-                </linearGradient>
-              </defs>
-              <!-- A字百褶長裙 -->
-              <path d="M84 24 L156 24 L188 236 Q120 246 52 236 Z" fill="url(#lilacSkirt)" stroke="#9580BD" stroke-width="2.5" stroke-linejoin="round"/>
-              <!-- 腰頭 -->
-              <rect x="83" y="24" width="74" height="12" rx="2" fill="#A28EC9" stroke="#8570AD" stroke-width="1.5"/>
-              <!-- 百褶線條 -->
-              <line x1="96" y1="36" x2="74" y2="238" stroke="#EAE3F7" stroke-width="1.6"/>
-              <line x1="108" y1="36" x2="96" y2="240" stroke="#EAE3F7" stroke-width="1.6"/>
-              <line x1="120" y1="36" x2="120" y2="241" stroke="#EAE3F7" stroke-width="1.6"/>
-              <line x1="132" y1="36" x2="144" y2="240" stroke="#EAE3F7" stroke-width="1.6"/>
-              <line x1="144" y1="36" x2="166" y2="238" stroke="#EAE3F7" stroke-width="1.6"/>
-            </svg>
-          `)
-        },
-        {
-          id: 'sample_5',
-          name: '極簡重磅純棉白T恤',
-          category: '上身',
-          subCategory: 'T恤',
-          length: '短版',
-          color: '純白',
-          season: '春夏',
-          occasion: '休閒日常',
-          image: svgToDataUrl(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 220">
-              <path d="M84 34 Q120 48 156 34 L204 62 L188 106 L166 96 L164 184 L76 184 L74 96 L52 106 L36 62 Z" fill="#FFFFFF" stroke="#BCC5D8" stroke-width="2.5" stroke-linejoin="round"/>
-              <!-- 圓領羅紋 -->
-              <path d="M84 34 Q120 56 156 34" fill="none" stroke="#9BA8C7" stroke-width="2.5"/>
-              <path d="M88 37 Q120 50 152 37" fill="none" stroke="#DCE2EE" stroke-width="1.5"/>
-            </svg>
-          `)
-        },
-        {
-          id: 'sample_6',
-          name: '藏青深海藍廓形西裝外套',
-          category: '外套',
-          subCategory: '西裝外套',
-          length: '中長版',
-          color: '藏青/深海藍',
-          season: '秋冬',
-          occasion: '上班正式',
-          image: svgToDataUrl(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 250">
-              <defs>
-                <linearGradient id="navyBlazer" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#314770"/>
-                  <stop offset="100%" stop-color="#20304F"/>
-                </linearGradient>
-              </defs>
-              <!-- 外套廓形 -->
-              <path d="M78 32 L104 26 L120 88 L136 26 L162 32 L206 62 L198 206 L176 206 L170 104 L168 218 L72 218 L70 104 L64 206 L42 206 L34 62 Z" fill="url(#navyBlazer)" stroke="#162238" stroke-width="2.5" stroke-linejoin="round"/>
-              <!-- 西裝駁頭翻領 -->
-              <path d="M104 26 L88 74 L106 82 L120 112 L134 82 L152 74 L136 26" fill="#283B5E" stroke="#162238" stroke-width="1.8"/>
-              <!-- 銀灰雙排扣與口袋蓋 -->
-              <circle cx="110" cy="136" r="3" fill="#B5C0D6"/>
-              <circle cx="130" cy="136" r="3" fill="#B5C0D6"/>
-              <circle cx="110" cy="164" r="3" fill="#B5C0D6"/>
-              <circle cx="130" cy="164" r="3" fill="#B5C0D6"/>
-              <rect x="82" y="168" width="22" height="5" rx="1" fill="#18253D"/>
-              <rect x="136" y="168" width="22" height="5" rx="1" fill="#18253D"/>
-            </svg>
-          `)
-        }
-      ];
-    }
-
-    // ==========================================
-    // 4. 初始化與本地儲存管理 (LocalStorage)
-    // ==========================================
     window.addEventListener('DOMContentLoaded', () => {
-      initDropdownOptions();
-      loadFromLocalStorage();
-      renderAll();
-      lucide.createIcons();
+      renderModalColorPicker();
+      renderColorFilterChips();
+      updateCloudStatusUI();
+
+      const isInitialized = localStorage.getItem('atelier_wardrobe_initialized') === 'true';
+      if (!isInitialized && wardrobe.length === 0 && !gasUrl) {
+        loadSampleWardrobe(true);
+        localStorage.setItem('atelier_wardrobe_initialized', 'true');
+      } else {
+        refreshAllUI();
+      }
+
+      if (gasUrl) {
+        syncFromCloud(false);
+      } else {
+        showBanner('💡 提示：目前為本機暫存模式，點擊右上角「連結雲端資料庫」即可將衣物照片自動儲存至 Google 雲端硬碟與試算表。');
+      }
     });
 
-    function loadFromLocalStorage() {
-      try {
-        const rawItems = localStorage.getItem(STORAGE_KEY_ITEMS);
-        const rawOutfits = localStorage.getItem(STORAGE_KEY_OUTFITS);
-
-        if (rawItems) {
-          wardrobeItems = JSON.parse(rawItems);
-        } else {
-          // 首次開啟自動載入 6 件預設衣物
-          wardrobeItems = createDefaultSamples();
-          saveItemsToStorage();
-        }
-
-        if (rawOutfits) {
-          savedOutfits = JSON.parse(rawOutfits);
-        }
-      } catch (err) {
-        console.error('讀取 LocalStorage 失敗:', err);
-        wardrobeItems = createDefaultSamples();
+    function showBanner(msg, autoHideMs = 0) {
+      const banner = document.getElementById('syncBanner');
+      banner.textContent = msg;
+      banner.classList.remove('hidden');
+      if (autoHideMs > 0) {
+        setTimeout(() => banner.classList.add('hidden'), autoHideMs);
       }
     }
 
-    function saveItemsToStorage() {
-      try {
-        localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(wardrobeItems));
-      } catch (e) {
-        showToast('儲存空間已接近上限，建議先匯出 JSON 備份或刪除不需要的衣物！', 'error');
+    function hideBanner() {
+      document.getElementById('syncBanner').classList.add('hidden');
+    }
+
+    function refreshAllUI() {
+      renderStats();
+      renderWardrobe();
+      renderCanvas();
+      renderLookbook();
+    }
+
+    function saveLocal() {
+      localStorage.setItem('atelier_wardrobe_v2', JSON.stringify(wardrobe));
+      localStorage.setItem('atelier_outfits_v2', JSON.stringify(outfits));
+      localStorage.setItem('atelier_wardrobe_initialized', 'true');
+    }
+
+    async function clearAllData() {
+      const msg = gasUrl
+        ? '確定要清空所有衣物、試衣間畫布與穿搭靈感簿嗎？\n（此動作也會同步清空 Google 試算表雲端資料，且之後不會再自動載入範例衣物。）'
+        : '確定要清空所有衣物、試衣間畫布與穿搭靈感簿嗎？\n（清空後重新整理網頁也不會再自動載入範例衣物。）';
+      if (!confirm(msg)) return;
+
+      wardrobe = [];
+      outfits = [];
+      canvasItems = [];
+      selectedCanvasItemId = null;
+      activeCategoryFilter = 'ALL';
+      activeColorFilter = 'ALL';
+
+      saveLocal();
+      renderColorFilterChips();
+      refreshAllUI();
+
+      if (gasUrl) {
+        await pushAllToCloud();
       }
     }
 
-    function saveOutfitsToStorage() {
-      try {
-        localStorage.setItem(STORAGE_KEY_OUTFITS, JSON.stringify(savedOutfits));
-      } catch (e) {
-        showToast('穿搭紀錄儲存空間不足，請清理舊紀錄或匯出備份。', 'error');
-      }
-    }
-
-    function restoreDefaultSamples() {
-      const defaults = createDefaultSamples();
-      const existingIds = new Set(wardrobeItems.map(i => i.id));
-      let addedCount = 0;
-      defaults.forEach(sample => {
-        if (!existingIds.has(sample.id)) {
-          wardrobeItems.unshift(sample);
-          addedCount++;
-        }
-      });
-      if (addedCount > 0) {
-        saveItemsToStorage();
-        renderAll();
-        showToast(`已成功補充 ${addedCount} 件預設範例衣物！`, 'success');
+    // 雲端同步控制
+    function updateCloudStatusUI() {
+      const dot = document.getElementById('cloudDot');
+      const text = document.getElementById('cloudBtnText');
+      const syncBtn = document.getElementById('manualSyncBtn');
+      const confirmBtn = document.getElementById('confirmAddBtn');
+      if (gasUrl) {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        text.textContent = '已連結雲端資料庫';
+        syncBtn.classList.remove('hidden');
+        if (confirmBtn) confirmBtn.textContent = '加入衣櫥並同步雲端';
+        hideBanner();
       } else {
-        showToast('預設範例衣物都已經在您的衣櫥中囉！', 'info');
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        text.textContent = '連結雲端資料庫';
+        syncBtn.classList.add('hidden');
+        if (confirmBtn) confirmBtn.textContent = '加入衣櫥（本機儲存）';
       }
     }
 
-    // ==========================================
-    // 5. 初始化下拉選單與色票
-    // ==========================================
-    function initDropdownOptions() {
-      // 篩選區：細分款式
-      const filterSub = document.getElementById('filterSubCategory');
-      ALL_SUB_CATEGORIES.forEach(sub => {
-        filterSub.insertAdjacentHTML('beforeend', `<option value="${sub}">${sub}</option>`);
-      });
-
-      // 篩選區 & 彈窗：長短版型
-      const filterLen = document.getElementById('filterLength');
-      const modalLen = document.getElementById('itemLengthSelect');
-      LENGTH_TYPES.forEach(len => {
-        filterLen.insertAdjacentHTML('beforeend', `<option value="${len}">${len}</option>`);
-        modalLen.insertAdjacentHTML('beforeend', `<option value="${len}">${len}</option>`);
-      });
-
-      // 篩選區：色系
-      const filterColor = document.getElementById('filterColor');
-      COLOR_PALETTE.forEach(c => {
-        filterColor.insertAdjacentHTML('beforeend', `<option value="${c.name}">${c.name}</option>`);
-      });
-
-      // 彈窗：大類
-      const modalCat = document.getElementById('itemCategorySelect');
-      CATEGORIES.forEach(cat => {
-        modalCat.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`);
-      });
-      updateModalSubCategories();
-
-      // 彈窗：視覺色票選擇器
-      renderColorSwatchPicker();
+    function openCloudModal() {
+      document.getElementById('gasUrlInput').value = gasUrl;
+      document.getElementById('cloudSyncMessage').textContent = '';
+      document.getElementById('cloudModal').classList.remove('hidden');
     }
 
-    function updateModalSubCategories() {
-      const cat = document.getElementById('itemCategorySelect').value;
-      const subSelect = document.getElementById('itemSubCategorySelect');
-      const subs = SUB_CATEGORIES_MAP[cat] || ALL_SUB_CATEGORIES;
-      subSelect.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
+    function closeCloudModal() {
+      document.getElementById('cloudModal').classList.add('hidden');
     }
 
-    function renderColorSwatchPicker() {
-      const container = document.getElementById('colorSwatchPicker');
-      const previewTextEl = document.getElementById('selectedColorPreviewText');
-      if (previewTextEl) previewTextEl.textContent = selectedModalColor;
+    function disconnectCloud() {
+      gasUrl = '';
+      localStorage.removeItem('atelier_gas_url');
+      updateCloudStatusUI();
+      closeCloudModal();
+    }
 
-      container.innerHTML = COLOR_PALETTE.map(c => {
-        const isSelected = selectedModalColor === c.name;
+    async function saveCloudUrlAndSync() {
+      const url = document.getElementById('gasUrlInput').value.trim();
+      if (!url.startsWith('https://script.google.com/')) {
+        document.getElementById('cloudSyncMessage').textContent = '⚠️ 請輸入正確的 Google Apps Script 網頁應用程式網址（以 https://script.google.com/ 開頭）！';
+        return;
+      }
+      gasUrl = url;
+      localStorage.setItem('atelier_gas_url', gasUrl);
+      updateCloudStatusUI();
+      document.getElementById('cloudSyncMessage').textContent = '⏳ 正在連線 Google 雲端資料庫並同步資料...';
+
+      // 若本機已有資料則推送合併，否則從雲端拉取
+      if (wardrobe.length > 0 || outfits.length > 0) {
+        await pushAllToCloud();
+      } else {
+        await syncFromCloud(false);
+      }
+
+      document.getElementById('cloudSyncMessage').textContent = '✅ 雲端資料庫已成功連線並同步完成！';
+      setTimeout(closeCloudModal, 900);
+    }
+
+    // 單件新增即時上傳至 Google Drive 圖床與試算表
+    async function pushSingleItemToCloud(item) {
+      if (!gasUrl) return;
+      showBanner('☁️ 正在將衣物去背圖片上傳至 Google 雲端硬碟並寫入資料庫...');
+      try {
+        const res = await fetch(gasUrl, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'addItem', item: item })
+        });
+        const data = await res.json();
+        if (data.status === 'success' && data.item) {
+          const idx = wardrobe.findIndex(i => i.id === item.id);
+          if (idx !== -1) {
+            wardrobe[idx].image = data.item.image; // 替換為穩定的 Google Drive 圖片網址
+            saveLocal();
+            refreshAllUI();
+          }
+          showBanner('✅ 衣物照片已成功儲存至 Google 雲端資料庫！', 3500);
+        } else {
+          showBanner('⚠️ 雲端儲存回傳異常：' + (data.message || '未知錯誤'), 5000);
+        }
+      } catch (e) {
+        console.error('單件雲端上傳失敗:', e);
+        showBanner('⚠️ 雲端連線失敗，已暫存於本機，請檢查 Apps Script 部署權限。', 5000);
+      }
+    }
+
+    // 全量同步至雲端
+    async function pushAllToCloud() {
+      if (!gasUrl) return;
+      showBanner('☁️ 正在同步所有衣櫥資料與圖片至 Google 雲端資料庫...');
+      try {
+        const res = await fetch(gasUrl, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'syncAll', items: wardrobe, outfits: outfits })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          wardrobe = data.items;
+          outfits = data.outfits;
+          saveLocal();
+          refreshAllUI();
+          showBanner('✅ 雲端資料庫同步完成！', 3000);
+        }
+      } catch (e) {
+        console.error('雲端同步失敗:', e);
+        showBanner('⚠️ 雲端同步失敗，請確認網路與 Apps Script 權限設定。', 4000);
+      }
+    }
+
+    // 從雲端讀取最新資料庫
+    async function syncFromCloud(showAlert) {
+      if (!gasUrl) return;
+      showBanner('🔄 正在從 Google 雲端資料庫讀取最新衣物與穿搭...');
+      try {
+        const res = await fetch(gasUrl);
+        const data = await res.json();
+        if (data.status === 'success') {
+          wardrobe = data.items || [];
+          outfits = data.outfits || [];
+          saveLocal();
+          refreshAllUI();
+          showBanner('✅ 已與 Google 雲端資料庫完成同步（共 ' + wardrobe.length + ' 件單品）', 3000);
+          if (showAlert) alert('✅ 已從 Google 試算表同步最新衣櫥資料！');
+        }
+      } catch (e) {
+        console.error('雲端讀取失敗:', e);
+        showBanner('⚠️ 無法讀取雲端資料庫，請確認 Apps Script 部署權限已設為「所有人」。', 5000);
+      }
+    }
+
+    function createSvgGarment(type, fillHex, strokeHex = '#3E4A6B') {
+      let path = '';
+      if (type === 'shirt') {
+        path = `<path d="M55 25 L80 20 L100 32 L120 20 L145 25 L175 60 L152 76 L140 62 L140 165 L60 165 L60 62 L48 76 L25 60 Z" fill="${fillHex}" stroke="${strokeHex}" stroke-width="2.5" stroke-linejoin="round"/>
+                <path d="M80 20 L100 45 L120 20 M100 45 L100 165" stroke="${strokeHex}" stroke-width="2" fill="none"/>`;
+      } else if (type === 'cardigan') {
+        path = `<path d="M55 25 L82 22 L100 65 L118 22 L145 25 L175 75 L155 88 L142 68 L142 170 L58 170 L58 68 L45 88 L25 75 Z" fill="${fillHex}" stroke="${strokeHex}" stroke-width="2.5" stroke-linejoin="round"/>
+                <line x1="100" y1="65" x2="100" y2="170" stroke="${strokeHex}" stroke-width="2"/>`;
+      } else if (type === 'pants') {
+        path = `<path d="M65 20 L135 20 L145 180 L112 180 L100 78 L88 180 L55 180 Z" fill="${fillHex}" stroke="${strokeHex}" stroke-width="2.5" stroke-linejoin="round"/>`;
+      } else if (type === 'skirt') {
+        path = `<path d="M72 22 L128 22 L156 172 L44 172 Z" fill="${fillHex}" stroke="${strokeHex}" stroke-width="2.5" stroke-linejoin="round"/>
+                <line x1="88" y1="22" x2="76" y2="172" stroke="${strokeHex}" stroke-width="1.5" stroke-opacity="0.45"/>
+                <line x1="112" y1="22" x2="124" y2="172" stroke="${strokeHex}" stroke-width="1.5" stroke-opacity="0.45"/>`;
+      } else if (type === 'dress') {
+        path = `<path d="M75 20 L125 20 L135 72 L158 180 L42 180 L65 72 Z" fill="${fillHex}" stroke="${strokeHex}" stroke-width="2.5" stroke-linejoin="round"/>
+                <line x1="65" y1="72" x2="135" y2="72" stroke="${strokeHex}" stroke-width="2"/>`;
+      }
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">${path}</svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    function loadSampleWardrobe(silent = false) {
+      const samples = [
+        { id: 's1', name: '霧霾藍雪紡垂墜襯衫', category: '上身', subType: '雪紡', length: '常規/中長', colorName: '霧霾藍', colorHex: '#6B88B8', image: createSvgGarment('shirt', '#8AA6D6') },
+        { id: 's2', name: '薰衣草紫針織開襟衫', category: '外套', subType: '針織/毛衣', length: '常規/中長', colorName: '薰衣草紫', colorHex: '#9D8EC7', image: createSvgGarment('cardigan', '#B4A4DC') },
+        { id: 's3', name: '丹寧藍高腰直筒長褲', category: '下身', subType: '長褲', length: '長版/及踝', colorName: '丹寧藍', colorHex: '#4B6587', image: createSvgGarment('pants', '#5B789E') },
+        { id: 's4', name: '丁香紫法式百褶長裙', category: '下身', subType: '長裙', length: '長版/及踝', colorName: '丁香紫', colorHex: '#C3B1E1', image: createSvgGarment('skirt', '#D3C4EC') },
+        { id: 's5', name: '純淨白法式荷葉襯衫', category: '上身', subType: '襯衫', length: '常規/中長', colorName: '純淨白', colorHex: '#F8F9FA', image: createSvgGarment('shirt', '#FFFFFF') },
+        { id: 's6', name: '深葡萄紫收腰連身洋裝', category: '連身', subType: '連身洋裝', length: '長版/及踝', colorName: '深葡萄紫', colorHex: '#5D3A6A', image: createSvgGarment('dress', '#7A528A') }
+      ];
+      wardrobe = [...samples, ...wardrobe.filter(i => !i.id.startsWith('s'))];
+      saveLocal();
+      refreshAllUI();
+      if (!silent && gasUrl) pushAllToCloud();
+    }
+
+    function renderStats() {
+      document.getElementById('totalCountBadge').textContent = `共 ${wardrobe.length} 件單品`;
+      const grid = document.getElementById('categoryStatsGrid');
+      const allCard = `
+        <button onclick="setCategoryFilter('ALL')" class="p-2.5 rounded-xl border text-left transition ${activeCategoryFilter === 'ALL' ? 'border-[#8E7AB5] bg-[#EAE6F3]/60 shadow-xs' : 'border-[#DCE1EE] bg-[#FAFBFD] hover:bg-slate-50'}">
+          <div class="text-[11px] text-[#6E768D]">全部單品</div>
+          <div class="text-lg font-bold text-[#5C76A8]">${wardrobe.length} <span class="text-xs font-normal">件</span></div>
+        </button>`;
+      const catCards = CATEGORIES.map(cat => {
+        const count = wardrobe.filter(i => i.category === cat).length;
+        const active = activeCategoryFilter === cat;
         return `
-          <button type="button" onclick="selectModalColor('${c.name}')"
-                  class="flex items-center gap-2 px-2.5 py-2 rounded-xl border text-left text-xs transition ${
-                    isSelected
-                      ? 'border-morandi-purple bg-morandi-lilacBg/70 font-semibold text-morandi-charcoal ring-1 ring-morandi-purple'
-                      : 'border-morandi-sand bg-white hover:bg-morandi-oat/60 text-morandi-muted'
-                  }">
-            <span class="w-4 h-4 rounded-full shrink-0 shadow-inner" style="background-color: ${c.hex}; border: 1.5px solid ${c.border};"></span>
-            <span class="truncate">${c.name}</span>
-          </button>
-        `;
+          <button onclick="setCategoryFilter('${cat}')" class="p-2.5 rounded-xl border text-left transition ${active ? 'border-[#8E7AB5] bg-[#EAE6F3]/60 shadow-xs' : 'border-[#DCE1EE] bg-[#FAFBFD] hover:bg-slate-50'}">
+            <div class="text-[11px] text-[#6E768D]">${cat}</div>
+            <div class="text-lg font-bold text-[#2C3244]">${count} <span class="text-xs font-normal">件</span></div>
+          </button>`;
+      }).join('');
+      grid.innerHTML = allCard + catCards;
+
+      const bar = document.getElementById('colorProgressBar');
+      const legend = document.getElementById('colorLegend');
+      if (wardrobe.length === 0) {
+        bar.innerHTML = '';
+        legend.innerHTML = '<span>尚無單品資料</span>';
+        return;
+      }
+      const colorCounts = {};
+      wardrobe.forEach(item => {
+        colorCounts[item.colorName] = (colorCounts[item.colorName] || 0) + 1;
+      });
+      const sortedColors = Object.entries(colorCounts).sort((a, b) => b[1] - a[1]);
+      bar.innerHTML = sortedColors.map(([cName, cnt]) => {
+        const pct = (cnt / wardrobe.length) * 100;
+        const pal = COLOR_PALETTE.find(p => p.name === cName) || { hex: '#8E7AB5' };
+        return `<div style="width:${pct}%; background-color:${pal.hex}" title="${cName}: ${cnt}件 (${Math.round(pct)}%)"></div>`;
+      }).join('');
+
+      legend.innerHTML = sortedColors.slice(0, 6).map(([cName, cnt]) => {
+        const pal = COLOR_PALETTE.find(p => p.name === cName) || { hex: '#8E7AB5' };
+        return `<span class="inline-flex items-center gap-1 bg-[#FAFBFD] px-2 py-0.5 rounded-full border border-[#DCE1EE]">
+          <span class="w-2.5 h-2.5 rounded-full border border-black/10" style="background:${pal.hex}"></span>
+          ${cName} <b>${cnt}</b>
+        </span>`;
       }).join('');
     }
 
-    function selectModalColor(colorName) {
-      selectedModalColor = colorName;
-      renderColorSwatchPicker();
+    function setCategoryFilter(cat) {
+      activeCategoryFilter = cat;
+      renderStats();
+      renderWardrobe();
     }
 
-    // ==========================================
-    // 6. 圖片上傳、壓縮與 Canvas 自動去背處理
-    // ==========================================
-    function handleModalImageDrop(event) {
-      event.preventDefault();
-      event.currentTarget.classList.remove('border-morandi-blue', 'bg-morandi-blue/5');
-      if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
-        processUploadedFiles(event.dataTransfer.files);
-      }
+    function renderColorFilterChips() {
+      const container = document.getElementById('colorFilterChips');
+      const allBtn = `<button onclick="setColorFilter('ALL')" class="px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${activeColorFilter === 'ALL' ? 'gradient-brand text-white border-transparent' : 'bg-white border-[#DCE1EE] text-[#6E768D]'}">全部色系</button>`;
+      const chips = COLOR_PALETTE.map(c => {
+        const active = activeColorFilter === c.name;
+        return `<button onclick="setColorFilter('${c.name}')" title="${c.name}" class="w-5 h-5 rounded-full border transition transform ${active ? 'scale-125 ring-2 ring-[#8E7AB5]' : 'border-black/15 hover:scale-110'}" style="background-color:${c.hex}"></button>`;
+      }).join('');
+      container.innerHTML = allBtn + chips;
     }
 
-    function handleImageUpload(event) {
-      if (event.target.files && event.target.files.length > 0) {
-        processUploadedFiles(event.target.files);
-      }
+    function setColorFilter(cName) {
+      activeColorFilter = cName;
+      renderColorFilterChips();
+      renderWardrobe();
     }
 
-    async function processUploadedFiles(fileList) {
-      const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
-      if (files.length === 0) {
-        showToast('請上傳有效的圖片檔案 (JPG / PNG / WebP)', 'error');
+    function renderWardrobe() {
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      const subFilter = document.getElementById('filterSubType').value;
+      const lenFilter = document.getElementById('filterLength').value;
+
+      const filtered = wardrobe.filter(item => {
+        if (activeCategoryFilter !== 'ALL' && item.category !== activeCategoryFilter) return false;
+        if (activeColorFilter !== 'ALL' && item.colorName !== activeColorFilter) return false;
+        if (subFilter !== 'ALL' && item.subType !== subFilter) return false;
+        if (lenFilter !== 'ALL' && item.length !== lenFilter) return false;
+        if (keyword && !`${item.name} ${item.subType} ${item.colorName} ${item.category}`.toLowerCase().includes(keyword)) return false;
+        return true;
+      });
+
+      const grid = document.getElementById('wardrobeGrid');
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-12 text-center text-xs text-[#6E768D]">目前衣櫥尚無符合條件的衣物，點擊右上角「＋ 新增衣物」開始上傳您的專屬衣物吧！</div>`;
         return;
       }
 
-      const removeBg = document.getElementById('autoRemoveBgToggle').checked;
-      pendingUploadImages = [];
+      grid.innerHTML = filtered.map(item => `
+        <div draggable="true" ondragstart="handleWardrobeDragStart(event, '${item.id}')"
+             class="group bg-[#FAFBFD] rounded-xl border border-[#DCE1EE] hover:border-[#8E7AB5] p-2.5 flex flex-col justify-between transition shadow-2xs hover:shadow-md">
+          <div>
+            <div class="relative h-28 rounded-lg bg-white border border-[#DCE1EE]/60 flex items-center justify-center overflow-hidden mb-2">
+              <img src="${item.image}" alt="${item.name}" class="max-h-full max-w-full object-contain transition group-hover:scale-105">
+              <button onclick="deleteWardrobeItem('${item.id}')" class="opacity-0 group-hover:opacity-100 absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/90 text-rose-500 border border-rose-100 text-xs flex items-center justify-center shadow-xs transition" title="刪除單品">✕</button>
+            </div>
+            <div class="text-xs font-semibold text-[#2C3244] truncate" title="${item.name}">${item.name}</div>
+            <div class="flex flex-wrap items-center gap-1 mt-1">
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#EAE6F3] text-[#6B5494]">${item.subType}</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-[#DCE1EE] text-[#6E768D] inline-flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full" style="background:${item.colorHex}"></span>${item.colorName}
+              </span>
+            </div>
+          </div>
+          <button onclick="addItemToCanvas('${item.id}')" class="mt-2.5 w-full py-1.5 rounded-lg text-[11px] font-semibold text-[#5C76A8] bg-[#E3EAF5]/70 hover:bg-[#5C76A8] hover:text-white transition">
+            ＋ 加入穿搭
+          </button>
+        </div>
+      `).join('');
+    }
 
-      for (const file of files) {
-        const rawDataUrl = await readFileAsDataURL(file);
-        const processedDataUrl = await compressAndProcessImage(rawDataUrl, removeBg);
-        const cleanFileName = file.name.replace(/\.[^/.]+$/, '');
-        pendingUploadImages.push({
-          rawDataUrl,
-          processedDataUrl,
-          originalName: cleanFileName
-        });
+    function deleteWardrobeItem(id) {
+      if (!confirm('確定要從衣櫥刪除此件單品嗎？')) return;
+      wardrobe = wardrobe.filter(i => i.id !== id);
+      saveLocal();
+      refreshAllUI();
+      if (gasUrl) pushAllToCloud();
+    }
+
+    function openAddModal() {
+      rawUploadedDataUrl = '';
+      processedUploadedDataUrl = '';
+      document.getElementById('itemImageInput').value = '';
+      document.getElementById('itemNameInput').value = '';
+      document.getElementById('previewProcessedImg').classList.add('hidden');
+      document.getElementById('previewPlaceholder').classList.remove('hidden');
+      document.getElementById('addModal').classList.remove('hidden');
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.add('hidden');
+    }
+
+    function renderModalColorPicker() {
+      const container = document.getElementById('modalColorPicker');
+      container.innerHTML = COLOR_PALETTE.map(c => `
+        <button type="button" onclick="selectModalColor('${c.name}')"
+                class="p-1.5 rounded-lg border text-[11px] flex items-center gap-1.5 transition ${selectedModalColor.name === c.name ? 'border-[#8E7AB5] bg-[#EAE6F3]/60 font-semibold' : 'border-[#DCE1EE] bg-white'}">
+          <span class="w-3.5 h-3.5 rounded-full border border-black/15 shrink-0" style="background:${c.hex}"></span>
+          <span class="truncate">${c.name}</span>
+        </button>
+      `).join('');
+    }
+
+    function selectModalColor(name) {
+      selectedModalColor = COLOR_PALETTE.find(c => c.name === name) || COLOR_PALETTE[0];
+      renderModalColorPicker();
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!document.getElementById('itemNameInput').value) {
+        document.getElementById('itemNameInput').value = file.name.replace(/\.[^/.]+$/, '');
       }
-
-      updateModalPreviewUI();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        rawUploadedDataUrl = e.target.result;
+        reprocessPreviewImage();
+      };
+      reader.readAsDataURL(file);
     }
 
-    function readFileAsDataURL(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
+    function reprocessPreviewImage() {
+      if (!rawUploadedDataUrl) return;
+      const removeBg = document.getElementById('autoRemoveBgCheck').checked;
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 480;
+        let w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
 
-    // 壓縮圖片至最大邊長 480px，並可選擇性執行淺色/白色背景透明化
-    function compressAndProcessImage(dataUrl, removeWhiteBg = true) {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          const MAX_DIM = 480;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > MAX_DIM || height > MAX_DIM) {
-            if (width > height) {
-              height = Math.round((height * MAX_DIM) / width);
-              width = MAX_DIM;
-            } else {
-              width = Math.round((width * MAX_DIM) / height);
-              height = MAX_DIM;
-            }
-          }
-
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-
-          if (removeWhiteBg) {
-            const imgData = ctx.getImageData(0, 0, width, height);
-            const data = imgData.data;
-
-            // 取樣四個角落的平均背景色作為參考基準
-            const corners = [
-              0,
-              (width - 1) * 4,
-              (height - 1) * width * 4,
-              ((height - 1) * width + (width - 1)) * 4
-            ];
-            let bgR = 255, bgG = 255, bgB = 255;
-            let sampleCount = 0, sumR = 0, sumG = 0, sumB = 0;
-
-            corners.forEach(idx => {
-              if (data[idx + 3] > 200) {
-                sumR += data[idx];
-                sumG += data[idx + 1];
-                sumB += data[idx + 2];
-                sampleCount++;
-              }
-            });
-
-            if (sampleCount > 0) {
-              bgR = sumR / sampleCount;
-              bgG = sumG / sampleCount;
-              bgB = sumB / sampleCount;
-            }
-
-            // 只有當背景屬於高亮度（純白或淺灰白牆面）時執行柔和去背，避免誤傷深色背景中的衣物
-            const isLightBg = (bgR > 205 && bgG > 205 && bgB > 205);
-
+        if (removeBg) {
+          const imgData = ctx.getImageData(0, 0, w, h);
+          const data = imgData.data;
+          const bgR = data[0], bgG = data[1], bgB = data[2];
+          const isLightBg = (bgR > 215 && bgG > 215 && bgB > 215);
+          if (isLightBg) {
             for (let i = 0; i < data.length; i += 4) {
-              const r = data[i];
-              const g = data[i + 1];
-              const b = data[i + 2];
-
-              if (isLightBg) {
-                const dist = Math.sqrt(
-                  Math.pow(r - bgR, 2) +
-                  Math.pow(g - bgG, 2) +
-                  Math.pow(b - bgB, 2)
-                );
-                // 距離小於 36 完全透明；36~56 之間做羽化半透明過渡，邊緣更自然
-                if (dist < 36) {
-                  data[i + 3] = 0;
-                } else if (dist < 56) {
-                  data[i + 3] = Math.round(((dist - 36) / 20) * data[i + 3]);
-                }
-              } else {
-                // 若非純白背景，仍針對極純白區域 (>242) 做溫和去背
-                if (r > 242 && g > 242 && b > 242) {
-                  data[i + 3] = 0;
-                }
+              const r = data[i], g = data[i + 1], b = data[i + 2];
+              const diff = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+              if (diff < 65 && r > 205 && g > 205 && b > 205) {
+                data[i + 3] = 0;
               }
             }
             ctx.putImageData(imgData, 0, 0);
           }
-
-          // 使用 PNG 保留透明通道
-          resolve(canvas.toDataURL('image/png'));
-        };
-        img.src = dataUrl;
-      });
-    }
-
-    async function reprocessCurrentPreview() {
-      if (pendingUploadImages.length === 0) return;
-      const removeBg = document.getElementById('autoRemoveBgToggle').checked;
-      for (let item of pendingUploadImages) {
-        if (item.rawDataUrl) {
-          item.processedDataUrl = await compressAndProcessImage(item.rawDataUrl, removeBg);
         }
-      }
-      updateModalPreviewUI();
+        processedUploadedDataUrl = canvas.toDataURL('image/png');
+        const preview = document.getElementById('previewProcessedImg');
+        preview.src = processedUploadedDataUrl;
+        preview.classList.remove('hidden');
+        document.getElementById('previewPlaceholder').classList.add('hidden');
+      };
+      img.src = rawUploadedDataUrl;
     }
 
-    function updateModalPreviewUI() {
-      const previewImg = document.getElementById('previewClothImg');
-      const placeholder = document.getElementById('previewPlaceholderText');
-      const badge = document.getElementById('batchCountBadge');
-      const nameInput = document.getElementById('itemNameInput');
-
-      if (pendingUploadImages.length > 0) {
-        previewImg.src = pendingUploadImages[0].processedDataUrl;
-        previewImg.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-
-        if (!nameInput.value.trim() && pendingUploadImages[0].originalName) {
-          nameInput.value = pendingUploadImages[0].originalName;
-        }
-
-        if (pendingUploadImages.length > 1) {
-          badge.textContent = `批次共 ${pendingUploadImages.length} 張`;
-          badge.classList.remove('hidden');
-        } else {
-          badge.classList.add('hidden');
-        }
-      } else {
-        previewImg.classList.add('hidden');
-        placeholder.classList.remove('hidden');
-        badge.classList.add('hidden');
-      }
-    }
-
-    // ==========================================
-    // 7. 衣物新增、編輯與刪除邏輯
-    // ==========================================
-    function openUploadModal(editId = null) {
-      const modal = document.getElementById('itemModal');
-      const titleEl = document.getElementById('itemModalTitle');
-      document.getElementById('editItemId').value = editId || '';
-      document.getElementById('itemImageInput').value = '';
-
-      if (editId) {
-        const item = wardrobeItems.find(i => i.id === editId);
-        if (!item) return;
-        titleEl.innerHTML = `<i data-lucide="edit-3" class="w-5 h-5 text-morandi-blueDark"></i><span>編輯衣物標籤資訊</span>`;
-        document.getElementById('itemNameInput').value = item.name;
-        document.getElementById('itemCategorySelect').value = item.category;
-        updateModalSubCategories();
-        document.getElementById('itemSubCategorySelect').value = item.subCategory;
-        document.getElementById('itemLengthSelect').value = item.length;
-        document.getElementById('itemSeasonSelect').value = item.season || '四季皆宜';
-        document.getElementById('itemOccasionSelect').value = item.occasion || '休閒日常';
-        selectedModalColor = item.color;
-        renderColorSwatchPicker();
-
-        pendingUploadImages = [{
-          rawDataUrl: item.image.startsWith('data:image/svg') ? null : item.image,
-          processedDataUrl: item.image,
-          originalName: item.name
-        }];
-      } else {
-        titleEl.innerHTML = `<i data-lucide="shirt" class="w-5 h-5 text-morandi-blueDark"></i><span>新增衣物單品</span>`;
-        document.getElementById('itemNameInput').value = '';
-        document.getElementById('itemCategorySelect').value = '上身';
-        updateModalSubCategories();
-        document.getElementById('itemLengthSelect').value = '常規';
-        document.getElementById('itemSeasonSelect').value = '四季皆宜';
-        document.getElementById('itemOccasionSelect').value = '休閒日常';
-        selectedModalColor = '霧霾藍';
-        renderColorSwatchPicker();
-        pendingUploadImages = [];
-      }
-
-      updateModalPreviewUI();
-      modal.classList.remove('hidden');
-      lucide.createIcons();
-    }
-
-    function closeItemModal() {
-      document.getElementById('itemModal').classList.add('hidden');
-    }
-
-    function saveWardrobeItem() {
-      const editId = document.getElementById('editItemId').value;
-      const baseName = document.getElementById('itemNameInput').value.trim();
-      const category = document.getElementById('itemCategorySelect').value;
-      const subCategory = document.getElementById('itemSubCategorySelect').value;
-      const length = document.getElementById('itemLengthSelect').value;
-      const season = document.getElementById('itemSeasonSelect').value;
-      const occasion = document.getElementById('itemOccasionSelect').value;
-
-      if (pendingUploadImages.length === 0) {
-        showToast('請先上傳衣物圖片！', 'error');
+    async function confirmAddItem() {
+      if (!processedUploadedDataUrl) {
+        alert('請先上傳衣物照片！');
         return;
       }
+      const name = document.getElementById('itemNameInput').value.trim() || '未命名單品';
+      const category = document.getElementById('itemCategoryInput').value;
+      const subType = document.getElementById('itemSubTypeInput').value;
+      const length = document.getElementById('itemLengthInput').value;
 
-      if (editId) {
-        const idx = wardrobeItems.findIndex(i => i.id === editId);
-        if (idx !== -1) {
-          wardrobeItems[idx] = {
-            ...wardrobeItems[idx],
-            name: baseName || `${selectedModalColor}${subCategory}`,
-            category,
-            subCategory,
-            length,
-            color: selectedModalColor,
-            season,
-            occasion,
-            image: pendingUploadImages[0].processedDataUrl
-          };
-          // 同步更新畫布上相同單品的圖片與名稱
-          canvasItems.forEach(ci => {
-            if (ci.itemId === editId) {
-              ci.image = pendingUploadImages[0].processedDataUrl;
-              ci.name = wardrobeItems[idx].name;
-            }
-          });
-          renderCanvasItems();
-          showToast('衣物資訊已更新！', 'success');
-        }
-      } else {
-        // 支援單張或批次多張新增
-        pendingUploadImages.forEach((imgObj, index) => {
-          let itemName = baseName;
-          if (!itemName) {
-            itemName = imgObj.originalName || `${selectedModalColor}${subCategory}`;
-          } else if (pendingUploadImages.length > 1) {
-            itemName = `${baseName} (${index + 1})`;
-          }
+      const newItem = {
+        id: 'item_' + Date.now(),
+        name,
+        category,
+        subType,
+        length,
+        colorName: selectedModalColor.name,
+        colorHex: selectedModalColor.hex,
+        image: processedUploadedDataUrl,
+        createdAt: new Date().toISOString()
+      };
 
-          wardrobeItems.unshift({
-            id: 'item_' + Date.now() + '_' + index,
-            name: itemName,
-            category,
-            subCategory,
-            length,
-            color: selectedModalColor,
-            season,
-            occasion,
-            image: imgObj.processedDataUrl
-          });
-        });
-        showToast(`成功新增 ${pendingUploadImages.length} 件衣物至衣櫥！`, 'success');
+      wardrobe.unshift(newItem);
+      saveLocal();
+      refreshAllUI();
+      closeAddModal();
+
+      // 若已連結雲端資料庫，立即將圖片上傳至 Google Drive 並寫入 Google 試算表
+      if (gasUrl) {
+        await pushSingleItemToCloud(newItem);
       }
-
-      saveItemsToStorage();
-      closeItemModal();
-      renderAll();
     }
 
-    function deleteWardrobeItem(id) {
-      wardrobeItems = wardrobeItems.filter(i => i.id !== id);
-      saveItemsToStorage();
-      renderAll();
-      showToast('已從衣櫥移除該件衣物', 'info');
-    }
-
-    // ==========================================
-    // 8. 渲染儀表板統計與衣櫥篩選列表
-    // ==========================================
-    function renderAll() {
-      renderDashboardStats();
-      renderCategoryTabs();
-      applyFilters();
-      renderLookbook();
-    }
-
-    function renderDashboardStats() {
-      // 總件數
-      document.getElementById('statTotalCount').textContent = wardrobeItems.length;
-      document.getElementById('statOutfitCount').innerHTML = `
-        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-        <span>已儲存 ${savedOutfits.length} 套穿搭靈感</span>
-      `;
-
-      // 各部位數量分布
-      const breakdownEl = document.getElementById('statCategoryBreakdown');
-      breakdownEl.innerHTML = CATEGORIES.map(cat => {
-        const count = wardrobeItems.filter(i => i.category === cat).length;
-        const isActive = activeCategoryTab === cat;
-        return `
-          <button onclick="selectCategoryTab('${cat}')"
-                  class="flex flex-col items-center justify-center p-2 rounded-xl border transition ${
-                    isActive
-                      ? 'bg-morandi-blue text-white border-morandi-blue shadow-sm'
-                      : 'bg-morandi-oat/50 hover:bg-morandi-oat border-morandi-sand/60 text-morandi-charcoal'
-                  }">
-            <span class="text-base sm:text-lg font-bold leading-tight">${count}</span>
-            <span class="text-[11px] truncate max-w-full ${isActive ? 'text-white/90' : 'text-morandi-muted'}">${cat}</span>
-          </button>
-        `;
-      }).join('');
-
-      // 色系占比分析
-      const total = wardrobeItems.length;
-      const colorCounts = COLOR_PALETTE.map(c => ({
-        ...c,
-        count: wardrobeItems.filter(i => i.color === c.name).length
-      })).filter(c => c.count > 0).sort((a, b) => b.count - a.count);
-
-      const barEl = document.getElementById('statColorBar');
-      const legendEl = document.getElementById('statColorLegend');
-      const topLabelEl = document.getElementById('statTopColorLabel');
-
-      if (total === 0 || colorCounts.length === 0) {
-        barEl.innerHTML = '';
-        legendEl.innerHTML = '<span>尚無衣物數據</span>';
-        topLabelEl.textContent = '主力色系：-';
-      } else {
-        const topColor = colorCounts[0];
-        const topPct = Math.round((topColor.count / total) * 100);
-        topLabelEl.textContent = `主力：${topColor.name} (${topPct}%)`;
-
-        barEl.innerHTML = colorCounts.map(c => {
-          const pct = (c.count / total) * 100;
-          return `<div style="width: ${pct}%; background-color: ${c.hex};" title="${c.name}: ${c.count}件 (${Math.round(pct)}%)" class="h-full border-r border-black/10 last:border-r-0 transition-all duration-300"></div>`;
-        }).join('');
-
-        legendEl.innerHTML = colorCounts.slice(0, 4).map(c => {
-          const pct = Math.round((c.count / total) * 100);
-          return `
-            <span class="flex items-center gap-1">
-              <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: ${c.hex}; border: 1px solid ${c.border};"></span>
-              <span>${c.name} ${pct}%</span>
-            </span>
-          `;
-        }).join('');
-      }
-      lucide.createIcons();
-    }
-
-    function renderCategoryTabs() {
-      const container = document.getElementById('categoryTabs');
-      const allTabs = ['ALL', ...CATEGORIES];
-      container.innerHTML = allTabs.map(tab => {
-        const label = tab === 'ALL' ? '全部單品' : tab;
-        const count = tab === 'ALL' ? wardrobeItems.length : wardrobeItems.filter(i => i.category === tab).length;
-        const isActive = activeCategoryTab === tab;
-        return `
-          <button onclick="selectCategoryTab('${tab}')"
-                  class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 ${
-                    isActive
-                      ? 'bg-morandi-blue text-white shadow-sm'
-                      : 'bg-white text-morandi-muted hover:text-morandi-charcoal border border-morandi-sand/70'
-                  }">
-            <span>${label}</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/25 text-white' : 'bg-morandi-oat text-morandi-muted'}">${count}</span>
-          </button>
-        `;
-      }).join('');
-    }
-
-    function selectCategoryTab(tab) {
-      activeCategoryTab = tab;
-      renderCategoryTabs();
-      renderDashboardStats();
-      applyFilters();
-    }
-
-    function resetFilters() {
-      activeCategoryTab = 'ALL';
-      document.getElementById('searchInput').value = '';
-      document.getElementById('filterSubCategory').value = 'ALL';
-      document.getElementById('filterLength').value = 'ALL';
-      document.getElementById('filterColor').value = 'ALL';
-      renderCategoryTabs();
-      renderDashboardStats();
-      applyFilters();
-    }
-
-    function applyFilters() {
-      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
-      const subCat = document.getElementById('filterSubCategory').value;
-      const length = document.getElementById('filterLength').value;
-      const color = document.getElementById('filterColor').value;
-
-      const filtered = wardrobeItems.filter(item => {
-        if (activeCategoryTab !== 'ALL' && item.category !== activeCategoryTab) return false;
-        if (subCat !== 'ALL' && item.subCategory !== subCat) return false;
-        if (length !== 'ALL' && item.length !== length) return false;
-        if (color !== 'ALL' && item.color !== color) return false;
-        if (keyword) {
-          const matchText = `${item.name} ${item.category} ${item.subCategory} ${item.color} ${item.season || ''} ${item.occasion || ''}`.toLowerCase();
-          if (!matchText.includes(keyword)) return false;
-        }
-        return true;
-      });
-
-      document.getElementById('filteredBadge').textContent = `顯示 ${filtered.length} 件`;
-      renderWardrobeGrid(filtered);
-    }
-
-    function renderWardrobeGrid(items) {
-      const grid = document.getElementById('wardrobeGrid');
-      if (items.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full py-12 flex flex-col items-center justify-center text-center">
-            <div class="w-14 h-14 rounded-2xl bg-morandi-oat flex items-center justify-center text-morandi-muted mb-3">
-              <i data-lucide="search-x" class="w-7 h-7"></i>
-            </div>
-            <p class="text-sm font-medium text-morandi-charcoal">找不到符合篩選條件的衣物</p>
-            <p class="text-xs text-morandi-muted mt-1">試試清除篩選條件，或點擊右上角「新增衣物」擴充您的衣櫥</p>
-          </div>
-        `;
-        lucide.createIcons();
-        return;
-      }
-
-      grid.innerHTML = items.map(item => {
-        const colorObj = COLOR_PALETTE.find(c => c.name === item.color) || { hex: '#CCCCCC', border: '#999999' };
-        return `
-          <div draggable="true"
-               ondragstart="handleCardDragStart(event, '${item.id}')"
-               class="group relative bg-white rounded-2xl border border-morandi-sand/80 hover:border-morandi-blue shadow-sm hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden cursor-grab active:cursor-grabbing">
-            
-            <!-- 右上角編輯/刪除懸浮按鈕 -->
-            <div class="absolute top-2 right-2 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onclick="openUploadModal('${item.id}')" title="編輯標籤" class="p-1.5 rounded-lg bg-white/90 hover:bg-morandi-blue text-morandi-charcoal hover:text-white shadow-sm border border-morandi-sand/60 transition">
-                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
-              </button>
-              <button onclick="deleteWardrobeItem('${item.id}')" title="刪除衣物" class="p-1.5 rounded-lg bg-white/90 hover:bg-morandi-rose text-morandi-charcoal hover:text-white shadow-sm border border-morandi-sand/60 transition">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
-
-            <!-- 左上角色票圓點 -->
-            <div class="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 border border-morandi-sand/60 shadow-2xs">
-              <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${colorObj.hex}; border: 1px solid ${colorObj.border};"></span>
-              <span class="text-[10px] font-medium text-morandi-muted">${item.color}</span>
-            </div>
-
-            <!-- 衣物縮圖區 -->
-            <div class="h-36 bg-gradient-to-b from-[#F7F9FD] to-[#EFEBF6] p-3 flex items-center justify-center relative">
-              <img src="${item.image}" alt="${item.name}" class="max-h-full max-w-full object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-200 pointer-events-none" />
-            </div>
-
-            <!-- 標籤與加入穿搭按鈕 -->
-            <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
-              <div>
-                <h3 class="text-xs sm:text-sm font-semibold text-morandi-charcoal truncate" title="${item.name}">${item.name}</h3>
-                <div class="flex flex-wrap gap-1 mt-1.5">
-                  <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-morandi-oat text-morandi-blueDark font-medium">${item.category}</span>
-                  <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-morandi-lilacBg text-morandi-purpleDark">${item.subCategory}</span>
-                  <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-morandi-oat/70 text-morandi-muted">${item.length}</span>
-                </div>
-              </div>
-
-              <button onclick="addItemToCanvas('${item.id}')" class="w-full py-1.5 rounded-xl text-xs font-medium bg-morandi-oat hover:bg-gradient-to-r hover:from-morandi-blue hover:to-morandi-purple text-morandi-blueDark hover:text-white transition flex items-center justify-center gap-1">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                <span>加入穿搭</span>
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      lucide.createIcons();
-    }
-
-    // ==========================================
-    // 9. 互動穿搭試衣間畫布（拖曳、縮放、旋轉、圖層）
-    // ==========================================
     function toggleSilhouette() {
       showSilhouette = !showSilhouette;
-      const overlay = document.getElementById('silhouetteOverlay');
-      const btn = document.getElementById('toggleSilhouetteBtn');
-      if (showSilhouette) {
-        overlay.classList.remove('opacity-0');
-        overlay.classList.add('opacity-70');
-        btn.classList.remove('bg-white', 'text-morandi-muted', 'border', 'border-morandi-sand');
-        btn.classList.add('bg-morandi-blue', 'text-white');
-      } else {
-        overlay.classList.remove('opacity-70');
-        overlay.classList.add('opacity-0');
-        btn.classList.remove('bg-morandi-blue', 'text-white');
-        btn.classList.add('bg-white', 'text-morandi-muted', 'border', 'border-morandi-sand');
-      }
+      document.getElementById('silhouetteGuide').style.display = showSilhouette ? 'block' : 'none';
+      document.getElementById('silhouetteToggleBtn').textContent = `身形比例線：${showSilhouette ? '開' : '關'}`;
     }
 
-    // HTML5 Drag & Drop 從左側拖曳衣物至右側畫布
-    function handleCardDragStart(event, itemId) {
-      event.dataTransfer.setData('text/plain', itemId);
-      event.dataTransfer.effectAllowed = 'copy';
+    function handleWardrobeDragStart(e, itemId) {
+      e.dataTransfer.setData('text/plain', itemId);
     }
 
-    function handleCanvasDragOver(event) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = 'copy';
-      document.getElementById('fittingCanvas').classList.add('border-morandi-blue', 'bg-morandi-blue/5');
-    }
-
-    function handleCanvasDragLeave(event) {
-      document.getElementById('fittingCanvas').classList.remove('border-morandi-blue', 'bg-morandi-blue/5');
-    }
-
-    function handleCanvasDrop(event) {
-      event.preventDefault();
-      const canvasEl = document.getElementById('fittingCanvas');
-      canvasEl.classList.remove('border-morandi-blue', 'bg-morandi-blue/5');
-
-      const itemId = event.dataTransfer.getData('text/plain');
+    function handleCanvasDrop(e) {
+      e.preventDefault();
+      const itemId = e.dataTransfer.getData('text/plain');
       if (!itemId) return;
-
-      const rect = canvasEl.getBoundingClientRect();
-      const dropX = event.clientX - rect.left;
-      const dropY = event.clientY - rect.top;
-      addItemToCanvas(itemId, dropX, dropY);
+      const rect = document.getElementById('fittingCanvas').getBoundingClientRect();
+      const x = e.clientX - rect.left - 65;
+      const y = e.clientY - rect.top - 65;
+      addItemToCanvas(itemId, x, y);
     }
 
-    // 加入衣物至試衣間畫布（依據衣物部位智慧預設合理位置與尺寸）
     function addItemToCanvas(itemId, customX = null, customY = null) {
-      const item = wardrobeItems.find(i => i.id === itemId);
+      const item = wardrobe.find(i => i.id === itemId);
       if (!item) return;
+      let defaultY = 85;
+      let defaultZ = 10;
+      if (item.category === '下身') { defaultY = 185; defaultZ = 8; }
+      else if (item.category === '連身') { defaultY = 95; defaultZ = 9; }
+      else if (item.category === '外套') { defaultY = 82; defaultZ = 15; }
+      else if (item.category === '鞋包配件') { defaultY = 320; defaultZ = 18; }
 
-      const canvasEl = document.getElementById('fittingCanvas');
-      const cw = canvasEl.clientWidth || 380;
-      const ch = canvasEl.clientHeight || 520;
-
-      // 依部位預設位置與基準寬度，貼合人體比例參考線
-      let defaultWidth = 150;
-      let defaultX = cw / 2;
-      let defaultY = ch * 0.35;
-      let defaultZ = canvasItems.length + 1;
-
-      if (item.category === '上身') {
-        defaultWidth = 148;
-        defaultY = 145;
-      } else if (item.category === '下身') {
-        defaultWidth = 145;
-        defaultY = 295;
-      } else if (item.category === '連身/套裝') {
-        defaultWidth = 165;
-        defaultY = 235;
-      } else if (item.category === '外套') {
-        defaultWidth = 164;
-        defaultY = 155;
-        // 外套預設圖層較高
-        defaultZ = Math.max(...canvasItems.map(c => c.zIndex), 0) + 2;
-      } else if (item.category === '鞋包配件') {
-        defaultWidth = 95;
-        defaultX = cw * 0.72;
-        defaultY = 390;
-      }
-
-      const instanceId = 'inst_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-      const newInstance = {
+      const instanceId = 'c_' + Date.now() + '_' + Math.floor(Math.random() * 100);
+      canvasItems.push({
         instanceId,
         itemId: item.id,
         name: item.name,
         image: item.image,
-        x: customX !== null ? customX : defaultX,
+        x: customX !== null ? customX : 85,
         y: customY !== null ? customY : defaultY,
-        width: defaultWidth,
         scale: 1,
-        rotation: 0,
+        rotate: 0,
         zIndex: defaultZ
-      };
-
-      canvasItems.push(newInstance);
-      selectedInstanceId = instanceId;
-      renderCanvasItems();
+      });
+      selectedCanvasItemId = instanceId;
+      renderCanvas();
     }
 
-    function renderCanvasItems() {
+    function renderCanvas() {
       const layer = document.getElementById('canvasItemsLayer');
-      const guide = document.getElementById('emptyCanvasGuide');
-
-      if (canvasItems.length === 0) {
-        guide.classList.remove('hidden');
-        layer.innerHTML = '';
-        updateControlBarUI();
-        return;
-      }
-
-      guide.classList.add('hidden');
-
-      // 依 zIndex 排序渲染
-      const sorted = [...canvasItems].sort((a, b) => a.zIndex - b.zIndex);
-
-      layer.innerHTML = sorted.map(ci => {
-        const isSelected = ci.instanceId === selectedInstanceId;
+      layer.innerHTML = canvasItems.map(ci => {
+        const isSelected = ci.instanceId === selectedCanvasItemId;
         return `
           <div id="${ci.instanceId}"
-               onpointerdown="startDragCanvasItem(event, '${ci.instanceId}')"
-               style="
-                 position: absolute;
-                 left: ${ci.x}px;
-                 top: ${ci.y}px;
-                 width: ${ci.width}px;
-                 z-index: ${ci.zIndex};
-                 transform: translate(-50%, -50%) scale(${ci.scale}) rotate(${ci.rotation}deg);
-               "
-               class="canvas-item cursor-move rounded-xl ${isSelected ? 'selected' : ''}">
-            <img src="${ci.image}" alt="${ci.name}" draggable="false" class="w-full h-auto object-contain pointer-events-none drop-shadow-md" />
-            
-            ${isSelected ? `
-              <!-- 右下角拖拉縮放控制點 -->
-              <div onpointerdown="startResizeCanvasItem(event, '${ci.instanceId}')"
-                   title="拖拉縮放大小"
-                   class="resize-handle absolute -bottom-2.5 -right-2.5 w-6 h-6 rounded-full bg-morandi-blue text-white shadow-md flex items-center justify-center cursor-nwse-resize">
-                <i data-lucide="maximize-2" class="w-3 h-3"></i>
-              </div>
-            ` : ''}
-          </div>
-        `;
+               onmousedown="startDragCanvasItem(event, '${ci.instanceId}')"
+               ontouchstart="startDragCanvasItem(event, '${ci.instanceId}')"
+               style="left:${ci.x}px; top:${ci.y}px; z-index:${ci.zIndex}; transform: scale(${ci.scale}) rotate(${ci.rotate}deg); width: 135px;"
+               class="canvas-item ${isSelected ? 'selected' : ''}">
+            <img src="${ci.image}" alt="${ci.name}" class="w-full h-auto pointer-events-none drop-shadow-sm">
+          </div>`;
       }).join('');
 
-      updateControlBarUI();
-      lucide.createIcons();
-    }
-
-    function updateControlBarUI() {
-      const noSelHint = document.getElementById('noSelectionHint');
-      const activeControls = document.getElementById('activeItemControls');
-      const selectedItem = canvasItems.find(c => c.instanceId === selectedInstanceId);
-
-      if (!selectedItem) {
-        noSelHint.classList.remove('hidden');
-        activeControls.classList.add('hidden');
+      const selected = canvasItems.find(c => c.instanceId === selectedCanvasItemId);
+      const label = document.getElementById('selectedItemLabel');
+      const actions = document.getElementById('selectedItemActions');
+      if (selected) {
+        label.textContent = `已選取：${selected.name}`;
+        actions.classList.remove('hidden');
       } else {
-        noSelHint.classList.add('hidden');
-        activeControls.classList.remove('hidden');
-        document.getElementById('selectedItemName').textContent = selectedItem.name;
-        document.getElementById('scaleSlider').value = selectedItem.scale;
-        document.getElementById('rotateSlider').value = selectedItem.rotation;
+        label.textContent = '點選畫布上的衣物可調整大小、旋轉與前後圖層';
+        actions.classList.add('hidden');
       }
     }
 
-    function deselectCanvasItem(event) {
-      if (event.target.id === 'fittingCanvas' || event.target.id === 'canvasItemsLayer') {
-        selectedInstanceId = null;
-        renderCanvasItems();
+    function deselectAllCanvasItems(e) {
+      if (e.target.id === 'fittingCanvas' || e.target.id === 'canvasItemsLayer') {
+        selectedCanvasItemId = null;
+        renderCanvas();
       }
     }
 
-    // 畫布內單品自由拖曳移動 (支援滑鼠與觸控 Pointer Events)
-    function startDragCanvasItem(event, instanceId) {
-      event.stopPropagation();
-      selectedInstanceId = instanceId;
-      renderCanvasItems();
+    function startDragCanvasItem(e, instanceId) {
+      e.stopPropagation();
+      selectedCanvasItemId = instanceId;
+      renderCanvas();
 
       const item = canvasItems.find(c => c.instanceId === instanceId);
       if (!item) return;
 
-      const startX = event.clientX;
-      const startY = event.clientY;
-      const origX = item.x;
-      const origY = item.y;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const startX = clientX - item.x;
+      const startY = clientY - item.y;
 
-      function onPointerMove(moveEvent) {
-        const dx = moveEvent.clientX - startX;
-        const dy = moveEvent.clientY - startY;
-        item.x = origX + dx;
-        item.y = origY + dy;
-
+      function onMove(ev) {
+        const curX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        const curY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+        item.x = curX - startX;
+        item.y = curY - startY;
         const el = document.getElementById(instanceId);
         if (el) {
-          el.style.left = `${item.x}px`;
-          el.style.top = `${item.y}px`;
+          el.style.left = item.x + 'px';
+          el.style.top = item.y + 'px';
         }
       }
 
-      function onPointerUp() {
-        window.removeEventListener('pointermove', onPointerMove);
-        window.removeEventListener('pointerup', onPointerUp);
+      function onEnd() {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onEnd);
+        window.removeEventListener('touchmove', onMove);
+        window.removeEventListener('touchend', onEnd);
       }
 
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onEnd);
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onEnd);
     }
 
-    // 拖拉右下角控制點縮放大小
-    function startResizeCanvasItem(event, instanceId) {
-      event.stopPropagation();
-      const item = canvasItems.find(c => c.instanceId === instanceId);
+    function adjustSelected(prop, delta) {
+      const item = canvasItems.find(c => c.instanceId === selectedCanvasItemId);
       if (!item) return;
-
-      const startX = event.clientX;
-      const startScale = item.scale;
-
-      function onPointerMove(moveEvent) {
-        const dx = moveEvent.clientX - startX;
-        const newScale = Math.min(2.2, Math.max(0.4, startScale + dx / 120));
-        item.scale = Number(newScale.toFixed(2));
-        document.getElementById('scaleSlider').value = item.scale;
-
-        const el = document.getElementById(instanceId);
-        if (el) {
-          el.style.transform = `translate(-50%, -50%) scale(${item.scale}) rotate(${item.rotation}deg)`;
-        }
-      }
-
-      function onPointerUp() {
-        window.removeEventListener('pointermove', onPointerMove);
-        window.removeEventListener('pointerup', onPointerUp);
-      }
-
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
-    }
-
-    function updateSelectedTransform() {
-      const item = canvasItems.find(c => c.instanceId === selectedInstanceId);
-      if (!item) return;
-
-      item.scale = parseFloat(document.getElementById('scaleSlider').value);
-      item.rotation = parseInt(document.getElementById('rotateSlider').value, 10);
-
-      const el = document.getElementById(selectedInstanceId);
-      if (el) {
-        el.style.transform = `translate(-50%, -50%) scale(${item.scale}) rotate(${item.rotation}deg)`;
-      }
-    }
-
-    function changeLayerOrder(direction) {
-      const item = canvasItems.find(c => c.instanceId === selectedInstanceId);
-      if (!item) return;
-
-      if (direction === 'up') {
-        item.zIndex += 1;
-      } else if (direction === 'down') {
-        item.zIndex = Math.max(1, item.zIndex - 1);
-      } else if (direction === 'top') {
-        const maxZ = Math.max(...canvasItems.map(c => c.zIndex), 1);
-        item.zIndex = maxZ + 1;
-      } else if (direction === 'bottom') {
-        canvasItems.forEach(c => {
-          if (c.instanceId !== selectedInstanceId) c.zIndex += 1;
-        });
-        item.zIndex = 1;
-      }
-      renderCanvasItems();
+      if (prop === 'scale') item.scale = Math.max(0.4, Math.min(2.2, +(item.scale + delta).toFixed(2)));
+      if (prop === 'rotate') item.rotate = (item.rotate + delta) % 360;
+      if (prop === 'z') item.zIndex = Math.max(1, item.zIndex + delta);
+      renderCanvas();
     }
 
     function removeSelectedCanvasItem() {
-      if (!selectedInstanceId) return;
-      canvasItems = canvasItems.filter(c => c.instanceId !== selectedInstanceId);
-      selectedInstanceId = null;
-      renderCanvasItems();
+      canvasItems = canvasItems.filter(c => c.instanceId !== selectedCanvasItemId);
+      selectedCanvasItemId = null;
+      renderCanvas();
     }
 
     function clearCanvas() {
       canvasItems = [];
-      selectedInstanceId = null;
-      renderCanvasItems();
+      selectedCanvasItemId = null;
+      renderCanvas();
     }
 
-    // ==========================================
-    // 10. 合成穿搭預覽圖並儲存至 Lookbook 靈感簿
-    // ==========================================
-    function openSaveOutfitModal() {
+    async function saveCurrentOutfit() {
       if (canvasItems.length === 0) {
-        showToast('試衣間畫布目前是空的，請先加入幾件衣物再儲存喔！', 'error');
+        alert('請先將衣物加入右側試衣間畫布再儲存喔！');
         return;
       }
-      const quickName = document.getElementById('outfitNameInput').value.trim();
-      document.getElementById('modalOutfitTitle').value = quickName || `我的穿搭靈感 #${savedOutfits.length + 1}`;
-      document.getElementById('modalOutfitNote').value = '';
-      document.getElementById('saveOutfitModal').classList.remove('hidden');
-    }
+      const title = document.getElementById('outfitTitleInput').value.trim() || `穿搭組合 #${outfits.length + 1}`;
+      const snapCanvas = document.createElement('canvas');
+      snapCanvas.width = 300;
+      snapCanvas.height = 460;
+      const ctx = snapCanvas.getContext('2d');
+      ctx.fillStyle = '#FAFBFD';
+      ctx.fillRect(0, 0, 300, 460);
 
-    function closeSaveOutfitModal() {
-      document.getElementById('saveOutfitModal').classList.add('hidden');
-    }
+      const sorted = [...canvasItems].sort((a, b) => a.zIndex - b.zIndex);
+      for (const ci of sorted) {
+        await new Promise(resolve => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            const w = 135;
+            const h = (img.height / img.width) * w || 135;
+            ctx.save();
+            ctx.translate(ci.x + w / 2, ci.y + h / 2);
+            ctx.rotate((ci.rotate * Math.PI) / 180);
+            ctx.scale(ci.scale, ci.scale);
+            ctx.drawImage(img, -w / 2, -h / 2, w, h);
+            ctx.restore();
+            resolve();
+          };
+          img.onerror = resolve;
+          img.src = ci.image;
+        });
+      }
 
-    async function confirmSaveOutfit() {
-      const title = document.getElementById('modalOutfitTitle').value.trim() || `穿搭造型 #${savedOutfits.length + 1}`;
-      const note = document.getElementById('modalOutfitNote').value.trim();
-
-      // 利用 HTML5 Canvas 合成完整穿搭預覽圖
-      const snapshotDataUrl = await generateOutfitSnapshot();
-
-      const newOutfit = {
+      const snapshotUrl = snapCanvas.toDataURL('image/png');
+      outfits.unshift({
         id: 'outfit_' + Date.now(),
         title,
-        note,
-        createdAt: new Date().toLocaleDateString('zh-TW'),
-        snapshot: snapshotDataUrl,
-        itemsLayout: JSON.parse(JSON.stringify(canvasItems))
-      };
-
-      savedOutfits.unshift(newOutfit);
-      saveOutfitsToStorage();
-      document.getElementById('outfitNameInput').value = '';
-      closeSaveOutfitModal();
-      renderDashboardStats();
-      renderLookbook();
-      showToast(`已成功儲存穿搭「${title}」！`, 'success');
-    }
-
-    // 將畫布上的所有衣物圖層繪製合成為一張精緻預覽圖
-    function generateOutfitSnapshot() {
-      return new Promise(async (resolve) => {
-        const fittingEl = document.getElementById('fittingCanvas');
-        const cw = fittingEl.clientWidth || 380;
-        const ch = fittingEl.clientHeight || 520;
-
-        const outCanvas = document.createElement('canvas');
-        outCanvas.width = cw;
-        outCanvas.height = ch;
-        const ctx = outCanvas.getContext('2d');
-
-        // 繪製質感霧藍薰衣草漸層背景
-        const grad = ctx.createLinearGradient(0, 0, 0, ch);
-        grad.addColorStop(0, '#F7F9FD');
-        grad.addColorStop(1, '#EFEBF6');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, cw, ch);
-
-        // 依 zIndex 順序繪製每件衣物
-        const sorted = [...canvasItems].sort((a, b) => a.zIndex - b.zIndex);
-
-        for (const ci of sorted) {
-          await new Promise((imgResolve) => {
-            const img = new Image();
-            img.onload = () => {
-              const aspectRatio = img.naturalHeight / (img.naturalWidth || 1);
-              const drawW = ci.width;
-              const drawH = ci.width * (aspectRatio || 1);
-
-              ctx.save();
-              ctx.translate(ci.x, ci.y);
-              ctx.rotate((ci.rotation * Math.PI) / 180);
-              ctx.scale(ci.scale, ci.scale);
-              ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
-              ctx.restore();
-              imgResolve();
-            };
-            img.onerror = () => imgResolve();
-            img.src = ci.image;
-          });
-        }
-
-        resolve(outCanvas.toDataURL('image/jpeg', 0.88));
+        occasion: '日常穿搭',
+        snapshot: snapshotUrl,
+        canvasItems: JSON.parse(JSON.stringify(canvasItems)),
+        createdAt: new Date().toLocaleDateString('zh-TW')
       });
+      document.getElementById('outfitTitleInput').value = '';
+      saveLocal();
+      renderLookbook();
+      if (gasUrl) await pushAllToCloud();
     }
 
     function renderLookbook() {
+      document.getElementById('outfitCountBadge').textContent = `共 ${outfits.length} 套搭配`;
       const grid = document.getElementById('lookbookGrid');
-      document.getElementById('lookbookBadge').textContent = `共 ${savedOutfits.length} 套造型`;
-
-      if (savedOutfits.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full py-10 rounded-2xl bg-morandi-oat/40 border border-dashed border-morandi-sand flex flex-col items-center justify-center text-center p-4">
-            <i data-lucide="sparkles" class="w-7 h-7 text-morandi-taupe mb-2"></i>
-            <p class="text-sm font-medium text-morandi-charcoal">尚未儲存任何穿搭靈感</p>
-            <p class="text-xs text-morandi-muted mt-1">在上方試衣間完成搭配後，點擊「儲存此套穿搭」即可建立您的造型相簿</p>
-          </div>
-        `;
-        lucide.createIcons();
+      if (outfits.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-8 text-center text-xs text-[#6E768D]">尚未儲存任何穿搭組合，在上方試衣間完成搭配後點擊「儲存此套穿搭」即可收藏！</div>`;
         return;
       }
-
-      grid.innerHTML = savedOutfits.map(outfit => `
-        <div class="group bg-white rounded-2xl border border-morandi-sand/80 hover:border-morandi-purple shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
-          <!-- 穿搭合成快照圖 -->
-          <div class="relative h-64 bg-gradient-to-b from-[#F5F7FC] to-[#EFEBF6] flex items-center justify-center overflow-hidden p-2">
-            <img src="${outfit.snapshot}" alt="${outfit.title}" class="max-h-full max-w-full object-contain rounded-xl shadow-2xs" />
-            
-            <!-- 右上角操作按鈕 -->
-            <div class="absolute top-2.5 right-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <a href="${outfit.snapshot}" download="${outfit.title}.jpg" title="下載穿搭圖片" class="p-1.5 rounded-lg bg-white/95 hover:bg-morandi-blue text-morandi-charcoal hover:text-white shadow-sm border border-morandi-sand/60 transition">
-                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-              </a>
-              <button onclick="deleteSavedOutfit('${outfit.id}')" title="刪除紀錄" class="p-1.5 rounded-lg bg-white/95 hover:bg-morandi-rose text-morandi-charcoal hover:text-white shadow-sm border border-morandi-sand/60 transition">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-              </button>
+      grid.innerHTML = outfits.map(o => `
+        <div class="rounded-xl border border-[#DCE1EE] bg-[#FAFBFD] p-3 flex flex-col justify-between">
+          <div>
+            <div class="h-48 rounded-lg bg-white border border-[#DCE1EE]/60 flex items-center justify-center overflow-hidden mb-2">
+              <img src="${o.snapshot}" alt="${o.title}" class="max-h-full max-w-full object-contain">
             </div>
-
-            <span class="absolute bottom-2.5 left-2.5 text-[10px] px-2 py-0.5 rounded-full bg-white/90 text-morandi-muted border border-morandi-sand/60">
-              ${outfit.itemsLayout.length} 件單品 · ${outfit.createdAt}
-            </span>
+            <div class="text-xs font-bold text-[#2C3244] truncate">${o.title}</div>
+            <div class="text-[10px] text-[#6E768D] mt-0.5">${o.createdAt || ''} · 共 ${o.canvasItems?.length || 0} 件單品</div>
           </div>
-
-          <!-- 資訊與載入按鈕 -->
-          <div class="p-3.5 flex-1 flex flex-col justify-between space-y-2.5">
-            <div>
-              <h3 class="text-sm font-bold text-morandi-charcoal truncate">${outfit.title}</h3>
-              <p class="text-xs text-morandi-muted line-clamp-2 mt-0.5">${outfit.note || '無額外搭配備註'}</p>
-            </div>
-            <button onclick="loadOutfitToCanvas('${outfit.id}')" class="w-full py-2 rounded-xl text-xs font-semibold bg-morandi-lilacBg hover:bg-gradient-to-r hover:from-morandi-blue hover:to-morandi-purple text-morandi-purpleDark hover:text-white transition flex items-center justify-center gap-1.5">
-              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-              <span>載入至試衣間微調</span>
-            </button>
+          <div class="flex items-center gap-1.5 mt-2.5">
+            <button onclick="loadOutfitToCanvas('${o.id}')" class="flex-1 py-1.5 rounded-lg text-[11px] font-medium bg-[#EAE6F3] text-[#6B5494] hover:opacity-90">載入微調</button>
+            <button onclick="deleteOutfit('${o.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] text-rose-500 border border-rose-200 hover:bg-rose-50">刪除</button>
           </div>
         </div>
       `).join('');
-
-      lucide.createIcons();
     }
 
     function loadOutfitToCanvas(outfitId) {
-      const outfit = savedOutfits.find(o => o.id === outfitId);
-      if (!outfit) return;
-
-      canvasItems = JSON.parse(JSON.stringify(outfit.itemsLayout));
-      selectedInstanceId = null;
-      renderCanvasItems();
-      document.getElementById('fittingCanvas').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      showToast(`已載入穿搭「${outfit.title}」，可繼續自由調整！`, 'success');
+      const found = outfits.find(o => o.id === outfitId);
+      if (!found) return;
+      canvasItems = JSON.parse(JSON.stringify(found.canvasItems || []));
+      selectedCanvasItemId = null;
+      renderCanvas();
+      document.getElementById('fittingCanvas').scrollIntoView({ behavior: 'smooth' });
     }
 
-    function deleteSavedOutfit(outfitId) {
-      savedOutfits = savedOutfits.filter(o => o.id !== outfitId);
-      saveOutfitsToStorage();
-      renderDashboardStats();
+    function deleteOutfit(outfitId) {
+      if (!confirm('確定刪除此套穿搭記錄？')) return;
+      outfits = outfits.filter(o => o.id !== outfitId);
+      saveLocal();
       renderLookbook();
-      showToast('已刪除該套穿搭靈感', 'info');
+      if (gasUrl) pushAllToCloud();
     }
 
-    // ==========================================
-    // 11. JSON 資料備份匯出與還原
-    // ==========================================
-    function exportDataJSON() {
-      const payload = {
-        appName: 'Atelier Wardrobe',
-        exportedAt: new Date().toISOString(),
-        wardrobeItems,
-        savedOutfits
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify({ wardrobe, outfits }, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `atelier_wardrobe_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.href = URL.createObjectURL(blob);
+      a.download = `atelier_wardrobe_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
-      URL.revokeObjectURL(url);
-      showToast('衣櫥與穿搭備份檔 (.json) 已開始下載！', 'success');
     }
 
-    function importDataJSON(event) {
+    function importJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const parsed = JSON.parse(e.target.result);
-          if (Array.isArray(parsed.wardrobeItems)) {
-            wardrobeItems = parsed.wardrobeItems;
-            saveItemsToStorage();
-          }
-          if (Array.isArray(parsed.savedOutfits)) {
-            savedOutfits = parsed.savedOutfits;
-            saveOutfitsToStorage();
-          }
-          renderAll();
-          showToast(`成功還原 ${wardrobeItems.length} 件衣物與 ${savedOutfits.length} 套穿搭！`, 'success');
+          if (Array.isArray(parsed.wardrobe)) wardrobe = parsed.wardrobe;
+          if (Array.isArray(parsed.outfits)) outfits = parsed.outfits;
+          saveLocal();
+          refreshAllUI();
+          if (gasUrl) pushAllToCloud();
+          alert('✅ 備份資料已成功匯入！');
         } catch (err) {
-          showToast('JSON 檔案格式不正確，無法還原資料。', 'error');
+          alert('檔案格式不正確，請確認為 JSON 備份檔。');
         }
-        event.target.value = '';
       };
       reader.readAsText(file);
-    }
-
-    // ==========================================
-    // 12. 輕提示通知元件 (Toast)
-    // ==========================================
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-
-      const styleMap = {
-        success: 'bg-morandi-blue text-white border-morandi-blueDark',
-        error: 'bg-morandi-rose text-white border-morandi-rose',
-        info: 'bg-morandi-purpleDark text-white border-morandi-purpleDark'
-      };
-
-      const iconMap = {
-        success: 'check-circle-2',
-        error: 'alert-circle',
-        info: 'info'
-      };
-
-      toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-float border text-xs sm:text-sm font-medium animate-fade-up ${styleMap[type] || styleMap.info}`;
-      toast.innerHTML = `
-        <i data-lucide="${iconMap[type] || 'info'}" class="w-4 h-4 shrink-0"></i>
-        <span>${message}</span>
-      `;
-
-      container.appendChild(toast);
-      lucide.createIcons();
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(8px)';
-        toast.style.transition = 'all 0.25s ease';
-        setTimeout(() => toast.remove(), 250);
-      }, 3200);
     }
   </script>
 </body>
