@@ -1,0 +1,18 @@
+{
+  "name": "Atelier Wardrobe 智慧衣櫥",
+  "short_name": "智慧衣櫥",
+  "description": "系統化單品盤點、智慧去背與互動穿搭試衣間",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F4F5FA",
+  "theme_color": "#5C76A8",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%235C76A8'/%3E%3Cstop offset='100%25' stop-color='%238E7AB5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='112' fill='url(%23g)'/%3E%3Cpath d='M256 110a38 38 0 0138 38c0 14-8 26-19 33v24l142 85a28 28 0 01-14 52H109a28 28 0 01-14-52l142-85v-24a38 38 0 01-19-33 38 38 0 0138-38z' fill='none' stroke='white' stroke-width='28' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
