@@ -4,11 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Atelier Wardrobe｜智慧衣櫥管理與互動穿搭模擬系統</title>
+  <!-- PWA 手機桌面安裝設定 -->
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#5C76A8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="智慧衣櫥">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
   <style>
@@ -199,7 +201,7 @@
         <div class="p-4 border-b border-[#DCE1EE] bg-[#FAFBFD] flex items-center justify-between">
           <div>
             <h2 class="text-sm font-bold text-[#2C3244]">互動穿搭試衣間</h2>
-            <p class="text-[11px] text-[#6E768D]">點擊左側單品「＋加入穿搭」或直接拖曳至畫布</p>
+            <p class="text-[11px] text-[#6E768D]">點擊左側單品「＋ 穿搭」或直接拖曳至畫布</p>
           </div>
           <div class="flex items-center gap-1.5">
             <button onclick="toggleSilhouette()" id="silhouetteToggleBtn" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#EAE6F3] text-[#6B5494] hover:opacity-90 transition">
@@ -291,8 +293,8 @@
       <div class="space-y-3 text-xs">
         <div class="p-3.5 rounded-xl bg-[#FAFBFD] border border-[#DCE1EE] space-y-3">
           <div id="uploadFileRow">
-            <label class="block font-semibold mb-1 text-[#2C3244]">1. 上傳衣物照片（自動歸檔至對應部位子資料夾）</label>
-           <input type="file" id="itemImageInput" accept="image/*" onchange="handleImageUpload(event)" class="w-full p-2 border border-dashed border-[#8E7AB5] rounded-xl bg-white">
+            <label class="block font-semibold mb-1 text-[#2C3244]">1. 上傳或更換衣物照片</label>
+            <input type="file" id="itemImageInput" accept="image/*" onchange="handleImageUpload(event)" class="w-full p-2 border border-dashed border-[#8E7AB5] rounded-xl bg-white">
           </div>
 
           <div class="flex flex-col sm:flex-row items-center gap-4">
@@ -310,9 +312,9 @@
               <div>
                 <div class="flex justify-between text-[11px] text-[#6E768D] mb-1">
                   <span>去背強度（容許灰階陰影範圍）</span>
-                  <span id="toleranceValueLabel" class="font-bold text-[#5C76A8]">52</span>
+                  <span id="toleranceValueLabel" class="font-bold text-[#5C76A8]">55</span>
                 </div>
-                <input type="range" id="bgToleranceRange" min="10" max="125" value="52"
+                <input type="range" id="bgToleranceRange" min="10" max="125" value="55"
                        oninput="document.getElementById('toleranceValueLabel').textContent=this.value; reprocessPreviewImage();"
                        class="w-full accent-[#8E7AB5] cursor-pointer">
                 <div class="flex justify-between text-[10px] text-[#6E768D]">
@@ -399,7 +401,7 @@
         <button onclick="closeCloudModal()" class="text-[#6E768D] hover:text-[#2C3244] text-lg">✕</button>
       </div>
       <div class="space-y-3 text-xs text-[#6E768D]">
-        <p class="leading-relaxed">貼上您的 Google Apps Script 部署網址（結尾為 <code class="bg-slate-100 px-1 rounded">/exec</code>）。連結成功後，系統會自動在您的 Google 雲端硬碟建立 <b>「Atelier_Wardrobe_衣物雲端專區」</b> 及各部位分類資料夾，所有上傳照片皆會自動儲存於此專區。</p>
+        <p class="leading-relaxed">貼上您的 Google Apps Script 部署網址（結尾為 <code class="bg-slate-100 px-1 rounded">/exec</code>）。首次連線時系統會自動從雲端讀取您的現有衣櫥資料，絕不會覆蓋原有紀錄。</p>
         <div>
           <label class="block font-semibold text-[#2C3244] mb-1">Apps Script 網頁應用程式網址</label>
           <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/...../exec" class="w-full px-3 py-2 rounded-xl border border-[#DCE1EE] text-[#2C3244] focus:outline-none focus:border-[#8E7AB5]">
@@ -414,7 +416,7 @@
         <button onclick="disconnectCloud()" class="text-xs text-rose-500 hover:underline">中斷連結</button>
         <div class="flex gap-2">
           <button onclick="closeCloudModal()" class="px-4 py-2 rounded-xl text-xs border border-[#DCE1EE]">關閉</button>
-          <button onclick="saveCloudUrlAndSync()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white gradient-brand shadow">儲存並連線同步</button>
+          <button onclick="saveCloudUrlAndSync()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white gradient-brand shadow">儲存並連線讀取</button>
         </div>
       </div>
     </div>
@@ -528,7 +530,6 @@
       }
     }
 
-    // 雲端專區同步控制
     function updateCloudStatusUI() {
       const dot = document.getElementById('cloudDot');
       const text = document.getElementById('cloudBtnText');
@@ -581,6 +582,11 @@
       closeCloudModal();
     }
 
+    /**
+     * 安全防覆蓋連線邏輯：
+     * 貼上雲端網址時，一律先從雲端讀取現有資料庫；
+     * 只有當雲端完全為空（0件衣物且0套穿搭）且本機有使用者自建單品（非 s1~s6 預設範例）時，才上傳至雲端。
+     */
     async function saveCloudUrlAndSync() {
       const url = document.getElementById('gasUrlInput').value.trim();
       if (!url.startsWith('https://script.google.com/')) {
@@ -589,21 +595,54 @@
       }
       gasUrl = url;
       localStorage.setItem('atelier_gas_url', gasUrl);
-      document.getElementById('cloudSyncMessage').textContent = '⏳ 正在建立 Google 雲端硬碟專區並同步資料...';
+      document.getElementById('cloudSyncMessage').textContent = '⏳ 正在連線雲端專區並讀取現有資料（安全防覆蓋模式）...';
 
-      if (wardrobe.length > 0 || outfits.length > 0) {
-        await pushAllToCloud();
-      } else {
-        await syncFromCloud(false);
-      }
+      const localCustomItems = wardrobe.filter(i => !String(i.id).startsWith('s'));
+      const localOutfits = [...outfits];
 
-      updateCloudStatusUI();
-      if (driveFolderUrl) {
-        document.getElementById('modalDriveFolderLink').href = driveFolderUrl;
-        document.getElementById('driveFolderPreviewRow').classList.remove('hidden');
+      try {
+        const res = await fetch(gasUrl);
+        const data = await res.json();
+        if (data.status === 'success') {
+          if (data.folderUrl) {
+            driveFolderUrl = data.folderUrl;
+          }
+          const cloudItems = data.items || [];
+          const cloudOutfits = data.outfits || [];
+
+          if (cloudItems.length > 0 || cloudOutfits.length > 0) {
+            // 雲端已有資料：一律以雲端為準，直接載入至本機，絕不覆蓋雲端
+            wardrobe = cloudItems;
+            outfits = cloudOutfits;
+            saveLocal();
+            refreshAllUI();
+          } else if (localCustomItems.length > 0 || localOutfits.length > 0) {
+            // 雲端為空且本機有使用者自建單品：協助首次初始化上傳
+            wardrobe = localCustomItems;
+            outfits = localOutfits;
+            await pushAllToCloud();
+          } else {
+            // 雲端為空且本機只有預設範例：清空範例保持乾淨狀態
+            wardrobe = [];
+            outfits = [];
+            saveLocal();
+            refreshAllUI();
+          }
+
+          updateCloudStatusUI();
+          if (driveFolderUrl) {
+            document.getElementById('modalDriveFolderLink').href = driveFolderUrl;
+            document.getElementById('driveFolderPreviewRow').classList.remove('hidden');
+          }
+          document.getElementById('cloudSyncMessage').textContent = `✅ 已安全連線並同步雲端資料（共 ${wardrobe.length} 件單品）！`;
+          setTimeout(closeCloudModal, 1000);
+        } else {
+          document.getElementById('cloudSyncMessage').textContent = '⚠️ 雲端回傳錯誤：' + (data.message || '請檢查部署設定');
+        }
+      } catch (err) {
+        console.error('雲端連線失敗:', err);
+        document.getElementById('cloudSyncMessage').textContent = '⚠️ 無法連線至雲端，請確認 Apps Script 權限已設為「所有人」。';
       }
-      document.getElementById('cloudSyncMessage').textContent = '✅ 雲端硬碟專區已建立並連線完成！';
-      setTimeout(closeCloudModal, 1000);
     }
 
     async function pushSingleItemToCloud(item) {
@@ -715,7 +754,7 @@
         { id: 's5', name: '純淨白法式荷葉襯衫', category: '上身', subType: '襯衫', length: '常規/中長', colorName: '純淨白', colorHex: '#F8F9FA', image: createSvgGarment('shirt', '#FFFFFF') },
         { id: 's6', name: '深葡萄紫收腰連身洋裝', category: '連身', subType: '連身洋裝', length: '長版/及踝', colorName: '深葡萄紫', colorHex: '#5D3A6A', image: createSvgGarment('dress', '#7A528A') }
       ];
-      wardrobe = [...samples, ...wardrobe.filter(i => !i.id.startsWith('s'))];
+      wardrobe = [...samples, ...wardrobe.filter(i => !String(i.id).startsWith('s'))];
       saveLocal();
       refreshAllUI();
       if (!silent && gasUrl) pushAllToCloud();
@@ -813,12 +852,9 @@
         <div draggable="true" ondragstart="handleWardrobeDragStart(event, '${item.id}')"
              class="group bg-[#FAFBFD] rounded-xl border border-[#DCE1EE] hover:border-[#8E7AB5] p-2.5 flex flex-col justify-between transition shadow-2xs hover:shadow-md">
           <div>
-            <div class="relative h-28 rounded-lg bg-white border border-[#DCE1EE]/60 flex items-center justify-center overflow-hidden mb-2">
+            <div class="relative h-28 rounded-lg checkerboard-bg border border-[#DCE1EE]/80 flex items-center justify-center overflow-hidden mb-2">
               <img src="${item.image}" alt="${item.name}" class="max-h-full max-w-full object-contain transition group-hover:scale-105">
-              <div class="opacity-0 group-hover:opacity-100 absolute top-1.5 right-1.5 flex items-center gap-1 transition">
-                <button onclick="openEditItemModal('${item.id}')" class="w-6 h-6 rounded-full bg-white/95 text-[#5C76A8] border border-[#DCE1EE] text-xs flex items-center justify-center shadow-xs hover:bg-[#EAE6F3]" title="調整去背強度 / 橡皮擦微調">🪄</button>
-                <button onclick="deleteWardrobeItem('${item.id}')" class="w-6 h-6 rounded-full bg-white/95 text-rose-500 border border-rose-100 text-xs flex items-center justify-center shadow-xs hover:bg-rose-50" title="刪除單品">✕</button>
-              </div>
+              <button onclick="deleteWardrobeItem('${item.id}')" class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/95 text-rose-500 border border-rose-200 text-xs flex items-center justify-center shadow-xs hover:bg-rose-50" title="刪除單品">✕</button>
             </div>
             <div class="text-xs font-semibold text-[#2C3244] truncate" title="${item.name}">${item.name}</div>
             <div class="flex flex-wrap items-center gap-1 mt-1">
@@ -828,9 +864,14 @@
               </span>
             </div>
           </div>
-          <button onclick="addItemToCanvas('${item.id}')" class="mt-2.5 w-full py-1.5 rounded-lg text-[11px] font-semibold text-[#5C76A8] bg-[#E3EAF5]/70 hover:bg-[#5C76A8] hover:text-white transition">
-            ＋ 加入穿搭
-          </button>
+          <div class="mt-2.5 flex items-center gap-1.5">
+            <button onclick="addItemToCanvas('${item.id}')" class="flex-1 py-1.5 rounded-lg text-[11px] font-semibold text-[#5C76A8] bg-[#E3EAF5]/80 hover:bg-[#5C76A8] hover:text-white transition">
+              ＋ 穿搭
+            </button>
+            <button onclick="openEditItemModal('${item.id}')" class="px-2 py-1.5 rounded-lg text-[11px] font-medium text-[#6B5494] bg-[#EAE6F3]/80 hover:bg-[#8E7AB5] hover:text-white transition" title="調整去背強度 / 手動橡皮擦 / 修改分類">
+              🪄 去背
+            </button>
+          </div>
         </div>
       `).join('');
     }
@@ -853,8 +894,8 @@
       document.getElementById('uploadFileRow').classList.remove('hidden');
       document.getElementById('itemImageInput').value = '';
       document.getElementById('itemNameInput').value = '';
-      document.getElementById('bgToleranceRange').value = 52;
-      document.getElementById('toleranceValueLabel').textContent = '52';
+      document.getElementById('bgToleranceRange').value = 55;
+      document.getElementById('toleranceValueLabel').textContent = '55';
       document.getElementById('editPreviewCanvas').classList.add('hidden');
       document.getElementById('previewPlaceholder').classList.remove('hidden');
       updateCloudStatusUI();
@@ -868,7 +909,7 @@
       isEraserActive = false;
       updateEraserBtnUI();
 
-      document.getElementById('modalTitle').textContent = `重新調整去背與資訊：${item.name}`;
+      document.getElementById('modalTitle').textContent = `🪄 調整去背與資訊：${item.name}`;
       document.getElementById('uploadFileRow').classList.remove('hidden');
       document.getElementById('itemImageInput').value = '';
       document.getElementById('itemNameInput').value = item.name;
@@ -877,8 +918,8 @@
       document.getElementById('itemLengthInput').value = item.length;
       selectModalColor(item.colorName);
 
-      document.getElementById('bgToleranceRange').value = 58;
-      document.getElementById('toleranceValueLabel').textContent = '58';
+      document.getElementById('bgToleranceRange').value = 65;
+      document.getElementById('toleranceValueLabel').textContent = '65';
       updateCloudStatusUI();
       document.getElementById('addModal').classList.remove('hidden');
 
@@ -937,7 +978,7 @@
     function reprocessPreviewImage() {
       if (!rawUploadedDataUrl) return;
       const removeBg = document.getElementById('autoRemoveBgCheck').checked;
-      const tolerance = parseInt(document.getElementById('bgToleranceRange').value, 10) || 52;
+      const tolerance = parseInt(document.getElementById('bgToleranceRange').value, 10) || 55;
 
       const img = new Image();
       img.onload = () => {
@@ -997,7 +1038,7 @@
             const maxC = Math.max(r, g, b), minC = Math.min(r, g, b);
             const saturation = maxC - minC;
 
-            if (dist <= tolerance * 1.45 && saturation < 42) {
+            if (dist <= tolerance * 1.45 && saturation < 45) {
               isBg[idx] = 1;
               queue[tail++] = idx;
             }
@@ -1108,7 +1149,7 @@
         eraseAt(e.touches[0].clientX, e.touches[0].clientY);
       }, { passive: false });
       canvas.addEventListener('touchmove', (e) => {
-        if (!isDrawingEraser) return;
+        if (!isEraserActive) return;
         e.preventDefault();
         eraseAt(e.touches[0].clientX, e.touches[0].clientY);
       }, { passive: false });
