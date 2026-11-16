@@ -38,6 +38,16 @@
         linear-gradient(to bottom, rgba(142, 122, 181, 0.06) 1px, transparent 1px);
       background-size: 24px 24px;
     }
+    .checkerboard-bg {
+      background-color: #ffffff;
+      background-image:
+        linear-gradient(45deg, #E2E6F0 25%, transparent 25%),
+        linear-gradient(-45deg, #E2E6F0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #E2E6F0 75%),
+        linear-gradient(-45deg, transparent 75%, #E2E6F0 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    }
     .canvas-item {
       position: absolute;
       cursor: grab;
@@ -68,7 +78,7 @@
           <h1 class="text-lg sm:text-xl font-bold tracking-tight text-[#2C3244] flex items-center gap-2">
             <span class="font-serif-brand italic text-[#5C76A8]">Atelier</span> 智慧衣櫥與互動穿搭
           </h1>
-          <p class="text-xs text-[#6E768D]">系統化單品盤點 · 智慧去背 · 雲端圖床自動同步</p>
+          <p class="text-xs text-[#6E768D]">系統化單品盤點 · 精準洪水填充去背 · 雲端硬碟專區同步</p>
         </div>
       </div>
 
@@ -76,9 +86,12 @@
       <div class="flex flex-wrap items-center gap-2">
         <button onclick="openCloudModal()" id="cloudStatusBtn" class="px-3 py-2 rounded-xl text-xs font-medium border border-[#DCE1EE] bg-[#F4F5FA] hover:bg-[#EAE6F3] text-[#5C76A8] flex items-center gap-1.5 transition">
           <span id="cloudDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
-          <span id="cloudBtnText">連結雲端資料庫</span>
+          <span id="cloudBtnText">連結雲端專區</span>
         </button>
-        <button onclick="syncFromCloud(true)" id="manualSyncBtn" class="hidden px-3 py-2 rounded-xl text-xs font-medium border border-[#8E7AB5]/40 bg-[#EAE6F3]/60 hover:bg-[#EAE6F3] text-[#6B5494] flex items-center gap-1 transition" title="從 Google 試算表重新讀取最新資料">
+        <a id="driveZoneLinkBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden px-3 py-2 rounded-xl text-xs font-medium border border-[#5C76A8]/35 bg-[#E3EAF5]/70 hover:bg-[#E3EAF5] text-[#3E588A] flex items-center gap-1 transition" title="在 Google 雲端硬碟開啟「Atelier_Wardrobe_衣物雲端專區」資料夾">
+          📂 雲端硬碟專區
+        </a>
+        <button onclick="syncFromCloud(true)" id="manualSyncBtn" class="hidden px-3 py-2 rounded-xl text-xs font-medium border border-[#8E7AB5]/40 bg-[#EAE6F3]/60 hover:bg-[#EAE6F3] text-[#6B5494] flex items-center gap-1 transition">
           🔄 重新同步
         </button>
         <button onclick="exportJSON()" class="px-3 py-2 rounded-xl text-xs font-medium border border-[#DCE1EE] bg-white hover:bg-slate-50 text-[#6E768D] transition">
@@ -171,7 +184,7 @@
           </div>
         </div>
 
-        <div class="p-4 max-h-[640px] overflow-y-auto">
+        <div class="p-4 max-h-[660px] overflow-y-auto">
           <div id="wardrobeGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
         </div>
       </div>
@@ -262,27 +275,57 @@
 
   </main>
 
-  <!-- 新增衣物彈窗 -->
+  <!-- 新增 / 編輯去背衣物彈窗 -->
   <div id="addModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 border border-[#DCE1EE] shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 border border-[#DCE1EE] shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-[#DCE1EE] pb-3">
-        <h3 class="text-base font-bold text-[#2C3244]">新增衣物單品（自動智慧去背並同步雲端）</h3>
+        <h3 id="modalTitle" class="text-base font-bold text-[#2C3244]">新增衣物單品（智慧去背並存入雲端硬碟專區）</h3>
         <button onclick="closeAddModal()" class="text-[#6E768D] hover:text-[#2C3244] text-lg">✕</button>
       </div>
 
       <div class="space-y-3 text-xs">
-        <div>
-          <label class="block font-semibold mb-1 text-[#2C3244]">1. 上傳衣物照片（支援白底/淺底自動透明去背）</label>
-          <input type="file" id="itemImageInput" accept="image/*" onchange="handleImageUpload(event)" class="w-full p-2 border border-dashed border-[#8E7AB5] rounded-xl bg-[#FAFBFD]">
-          <div class="mt-2 flex items-center gap-3">
-            <div class="w-24 h-24 rounded-xl border border-[#DCE1EE] canvas-grid flex items-center justify-center overflow-hidden">
-              <img id="previewProcessedImg" class="max-w-full max-h-full object-contain hidden">
-              <span id="previewPlaceholder" class="text-[11px] text-[#6E768D]">預覽區</span>
+        <div class="p-3.5 rounded-xl bg-[#FAFBFD] border border-[#DCE1EE] space-y-3">
+          <div id="uploadFileRow">
+            <label class="block font-semibold mb-1 text-[#2C3244]">1. 上傳衣物照片（自動歸檔至對應部位子資料夾）</label>
+            <input type="file" id="itemImageInput" accept="image/*" onchange="handleImageUpload(event)" class="w-full p-2 border border-dashed border-[#8E7AB5] rounded-xl bg-white">
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-4">
+            <div class="relative w-44 h-44 rounded-xl border-2 border-[#C7D0E6] checkerboard-bg flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+              <canvas id="editPreviewCanvas" class="max-w-full max-h-full object-contain hidden"></canvas>
+              <span id="previewPlaceholder" class="text-[11px] text-[#6E768D] bg-white/85 px-2.5 py-1 rounded-full">透明去背預覽區</span>
             </div>
-            <label class="flex items-center gap-2 cursor-pointer text-[#6E768D]">
-              <input type="checkbox" id="autoRemoveBgCheck" checked onchange="reprocessPreviewImage()" class="accent-[#8E7AB5]">
-              啟用淺色背景自動透明化（方便疊加穿搭）
-            </label>
+
+            <div class="flex-1 w-full space-y-2.5">
+              <label class="flex items-center gap-2 cursor-pointer font-medium text-[#2C3244]">
+                <input type="checkbox" id="autoRemoveBgCheck" checked onchange="reprocessPreviewImage()" class="accent-[#8E7AB5] w-4 h-4">
+                啟用智慧邊緣去背（保留衣物內部淺色）
+              </label>
+
+              <div>
+                <div class="flex justify-between text-[11px] text-[#6E768D] mb-1">
+                  <span>去背強度（容許灰階陰影範圍）</span>
+                  <span id="toleranceValueLabel" class="font-bold text-[#5C76A8]">52</span>
+                </div>
+                <input type="range" id="bgToleranceRange" min="10" max="125" value="52"
+                       oninput="document.getElementById('toleranceValueLabel').textContent=this.value; reprocessPreviewImage();"
+                       class="w-full accent-[#8E7AB5] cursor-pointer">
+                <div class="flex justify-between text-[10px] text-[#6E768D]">
+                  <span>柔和（淺色衣物適用）</span>
+                  <span>強力（消除灰牆陰影）</span>
+                </div>
+              </div>
+
+              <div class="pt-1 flex flex-wrap items-center gap-2">
+                <button type="button" id="eraserToggleBtn" onclick="toggleEraserMode()" class="px-2.5 py-1.5 rounded-lg text-[11px] font-medium border border-[#DCE1EE] bg-white text-[#2C3244] hover:bg-[#EAE6F3] transition">
+                  🧹 手動橡皮擦：關
+                </button>
+                <button type="button" onclick="reprocessPreviewImage()" class="px-2.5 py-1.5 rounded-lg text-[11px] text-[#6E768D] hover:text-[#2C3244] underline">
+                  重置擦除
+                </button>
+              </div>
+              <p id="eraserHint" class="hidden text-[10px] text-[#8E7AB5]">💡 提示：直接在左側預覽圖上按住滑鼠或手指滑動，即可擦除多餘文字或邊角雜點！</p>
+            </div>
           </div>
         </div>
 
@@ -292,7 +335,7 @@
             <input type="text" id="itemNameInput" placeholder="例：薰衣草紫雪紡襯衫" class="w-full px-3 py-2 rounded-xl border border-[#DCE1EE]">
           </div>
           <div>
-            <label class="block font-semibold mb-1">部位大類</label>
+            <label class="block font-semibold mb-1">部位大類（決定雲端專區子資料夾）</label>
             <select id="itemCategoryInput" class="w-full px-3 py-2 rounded-xl border border-[#DCE1EE]">
               <option value="上身">上身</option>
               <option value="下身">下身</option>
@@ -338,23 +381,27 @@
 
       <div class="flex justify-end gap-2 pt-3 border-t border-[#DCE1EE]">
         <button onclick="closeAddModal()" class="px-4 py-2 rounded-xl text-xs border border-[#DCE1EE] text-[#6E768D]">取消</button>
-        <button id="confirmAddBtn" onclick="confirmAddItem()" class="px-5 py-2 rounded-xl text-xs font-semibold text-white gradient-brand shadow">加入衣櫥並同步雲端</button>
+        <button id="confirmAddBtn" onclick="confirmAddItem()" class="px-5 py-2 rounded-xl text-xs font-semibold text-white gradient-brand shadow">加入衣櫥並存入雲端專區</button>
       </div>
     </div>
   </div>
 
-  <!-- 雲端同步設定彈窗 -->
+  <!-- 雲端硬碟專區連結設定彈窗 -->
   <div id="cloudModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 border border-[#DCE1EE] shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b border-[#DCE1EE] pb-3">
-        <h3 class="text-base font-bold text-[#2C3244]">☁️ 連結 Google 雲端資料庫與圖床</h3>
+        <h3 class="text-base font-bold text-[#2C3244]">☁️ 連結 Google 雲端硬碟衣物專區</h3>
         <button onclick="closeCloudModal()" class="text-[#6E768D] hover:text-[#2C3244] text-lg">✕</button>
       </div>
       <div class="space-y-3 text-xs text-[#6E768D]">
-        <p class="leading-relaxed">貼上您的 Google Apps Script 部署網址（結尾為 <code class="bg-slate-100 px-1 rounded">/exec</code>）。連結成功後，您上傳的每張衣物照片都會自動存入 Google 雲端硬碟並同步至 Google 試算表。</p>
+        <p class="leading-relaxed">貼上您的 Google Apps Script 部署網址（結尾為 <code class="bg-slate-100 px-1 rounded">/exec</code>）。連結成功後，系統會自動在您的 Google 雲端硬碟建立 <b>「Atelier_Wardrobe_衣物雲端專區」</b> 及各部位分類資料夾，所有上傳照片皆會自動儲存於此專區。</p>
         <div>
           <label class="block font-semibold text-[#2C3244] mb-1">Apps Script 網頁應用程式網址</label>
           <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/...../exec" class="w-full px-3 py-2 rounded-xl border border-[#DCE1EE] text-[#2C3244] focus:outline-none focus:border-[#8E7AB5]">
+        </div>
+        <div id="driveFolderPreviewRow" class="hidden p-2.5 rounded-xl bg-[#F4F5FA] border border-[#DCE1EE] flex items-center justify-between">
+          <span class="text-[#2C3244] font-medium">📂 雲端硬碟專區已建立就緒</span>
+          <a id="modalDriveFolderLink" href="#" target="_blank" rel="noopener noreferrer" class="text-[#5C76A8] font-semibold underline">前往資料夾 ↗</a>
         </div>
         <div id="cloudSyncMessage" class="text-[11px] font-medium text-[#5C76A8]"></div>
       </div>
@@ -389,12 +436,16 @@
     let wardrobe = JSON.parse(localStorage.getItem('atelier_wardrobe_v2') || '[]');
     let outfits = JSON.parse(localStorage.getItem('atelier_outfits_v2') || '[]');
     let gasUrl = localStorage.getItem('atelier_gas_url') || '';
+    let driveFolderUrl = localStorage.getItem('atelier_drive_folder_url') || '';
 
     let activeCategoryFilter = 'ALL';
     let activeColorFilter = 'ALL';
     let selectedModalColor = COLOR_PALETTE[0];
+
+    let editingItemId = null;
     let rawUploadedDataUrl = '';
-    let processedUploadedDataUrl = '';
+    let isEraserActive = false;
+    let isDrawingEraser = false;
 
     let canvasItems = [];
     let selectedCanvasItemId = null;
@@ -404,6 +455,7 @@
       renderModalColorPicker();
       renderColorFilterChips();
       updateCloudStatusUI();
+      setupEraserEvents();
 
       const isInitialized = localStorage.getItem('atelier_wardrobe_initialized') === 'true';
       if (!isInitialized && wardrobe.length === 0 && !gasUrl) {
@@ -416,7 +468,7 @@
       if (gasUrl) {
         syncFromCloud(false);
       } else {
-        showBanner('💡 提示：目前為本機暫存模式，點擊右上角「連結雲端資料庫」即可將衣物照片自動儲存至 Google 雲端硬碟與試算表。');
+        showBanner('💡 提示：點擊右上角「連結雲端專區」即可自動建立 Google 雲端硬碟專屬資料夾並同步儲存所有上傳照片。');
       }
     });
 
@@ -444,6 +496,9 @@
       localStorage.setItem('atelier_wardrobe_v2', JSON.stringify(wardrobe));
       localStorage.setItem('atelier_outfits_v2', JSON.stringify(outfits));
       localStorage.setItem('atelier_wardrobe_initialized', 'true');
+      if (driveFolderUrl) {
+        localStorage.setItem('atelier_drive_folder_url', driveFolderUrl);
+      }
     }
 
     async function clearAllData() {
@@ -468,29 +523,43 @@
       }
     }
 
-    // 雲端同步控制
+    // 雲端專區同步控制
     function updateCloudStatusUI() {
       const dot = document.getElementById('cloudDot');
       const text = document.getElementById('cloudBtnText');
       const syncBtn = document.getElementById('manualSyncBtn');
+      const driveBtn = document.getElementById('driveZoneLinkBtn');
       const confirmBtn = document.getElementById('confirmAddBtn');
+
       if (gasUrl) {
         dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-        text.textContent = '已連結雲端資料庫';
+        text.textContent = '已連結雲端專區';
         syncBtn.classList.remove('hidden');
-        if (confirmBtn) confirmBtn.textContent = '加入衣櫥並同步雲端';
+        if (driveFolderUrl) {
+          driveBtn.href = driveFolderUrl;
+          driveBtn.classList.remove('hidden');
+        }
+        if (confirmBtn) confirmBtn.textContent = editingItemId ? '儲存更新並同步雲端專區' : '加入衣櫥並存入雲端專區';
         hideBanner();
       } else {
         dot.className = 'w-2 h-2 rounded-full bg-amber-400';
-        text.textContent = '連結雲端資料庫';
+        text.textContent = '連結雲端專區';
         syncBtn.classList.add('hidden');
-        if (confirmBtn) confirmBtn.textContent = '加入衣櫥（本機儲存）';
+        driveBtn.classList.add('hidden');
+        if (confirmBtn) confirmBtn.textContent = editingItemId ? '儲存更新' : '加入衣櫥（本機儲存）';
       }
     }
 
     function openCloudModal() {
       document.getElementById('gasUrlInput').value = gasUrl;
       document.getElementById('cloudSyncMessage').textContent = '';
+      const previewRow = document.getElementById('driveFolderPreviewRow');
+      if (driveFolderUrl) {
+        document.getElementById('modalDriveFolderLink').href = driveFolderUrl;
+        previewRow.classList.remove('hidden');
+      } else {
+        previewRow.classList.add('hidden');
+      }
       document.getElementById('cloudModal').classList.remove('hidden');
     }
 
@@ -500,7 +569,9 @@
 
     function disconnectCloud() {
       gasUrl = '';
+      driveFolderUrl = '';
       localStorage.removeItem('atelier_gas_url');
+      localStorage.removeItem('atelier_drive_folder_url');
       updateCloudStatusUI();
       closeCloudModal();
     }
@@ -508,29 +579,31 @@
     async function saveCloudUrlAndSync() {
       const url = document.getElementById('gasUrlInput').value.trim();
       if (!url.startsWith('https://script.google.com/')) {
-        document.getElementById('cloudSyncMessage').textContent = '⚠️ 請輸入正確的 Google Apps Script 網頁應用程式網址（以 https://script.google.com/ 開頭）！';
+        document.getElementById('cloudSyncMessage').textContent = '⚠️ 請輸入正確的 Google Apps Script 網頁應用程式網址！';
         return;
       }
       gasUrl = url;
       localStorage.setItem('atelier_gas_url', gasUrl);
-      updateCloudStatusUI();
-      document.getElementById('cloudSyncMessage').textContent = '⏳ 正在連線 Google 雲端資料庫並同步資料...';
+      document.getElementById('cloudSyncMessage').textContent = '⏳ 正在建立 Google 雲端硬碟專區並同步資料...';
 
-      // 若本機已有資料則推送合併，否則從雲端拉取
       if (wardrobe.length > 0 || outfits.length > 0) {
         await pushAllToCloud();
       } else {
         await syncFromCloud(false);
       }
 
-      document.getElementById('cloudSyncMessage').textContent = '✅ 雲端資料庫已成功連線並同步完成！';
-      setTimeout(closeCloudModal, 900);
+      updateCloudStatusUI();
+      if (driveFolderUrl) {
+        document.getElementById('modalDriveFolderLink').href = driveFolderUrl;
+        document.getElementById('driveFolderPreviewRow').classList.remove('hidden');
+      }
+      document.getElementById('cloudSyncMessage').textContent = '✅ 雲端硬碟專區已建立並連線完成！';
+      setTimeout(closeCloudModal, 1000);
     }
 
-    // 單件新增即時上傳至 Google Drive 圖床與試算表
     async function pushSingleItemToCloud(item) {
       if (!gasUrl) return;
-      showBanner('☁️ 正在將衣物去背圖片上傳至 Google 雲端硬碟並寫入資料庫...');
+      showBanner(`☁️ 正在將去背照片存入雲端專區「${item.category}」資料夾...`);
       try {
         const res = await fetch(gasUrl, {
           method: 'POST',
@@ -538,26 +611,27 @@
         });
         const data = await res.json();
         if (data.status === 'success' && data.item) {
+          if (data.folderUrl) {
+            driveFolderUrl = data.folderUrl;
+            updateCloudStatusUI();
+          }
           const idx = wardrobe.findIndex(i => i.id === item.id);
           if (idx !== -1) {
-            wardrobe[idx].image = data.item.image; // 替換為穩定的 Google Drive 圖片網址
+            wardrobe[idx].image = data.item.image;
             saveLocal();
             refreshAllUI();
           }
-          showBanner('✅ 衣物照片已成功儲存至 Google 雲端資料庫！', 3500);
-        } else {
-          showBanner('⚠️ 雲端儲存回傳異常：' + (data.message || '未知錯誤'), 5000);
+          showBanner(`✅ 照片已成功存入 Google 雲端硬碟專區（${item.category}）！`, 4000);
         }
       } catch (e) {
         console.error('單件雲端上傳失敗:', e);
-        showBanner('⚠️ 雲端連線失敗，已暫存於本機，請檢查 Apps Script 部署權限。', 5000);
+        showBanner('⚠️ 雲端連線失敗，已暫存於本機。', 5000);
       }
     }
 
-    // 全量同步至雲端
     async function pushAllToCloud() {
       if (!gasUrl) return;
-      showBanner('☁️ 正在同步所有衣櫥資料與圖片至 Google 雲端資料庫...');
+      showBanner('☁️ 正在同步所有衣櫥照片至 Google 雲端硬碟專區...');
       try {
         const res = await fetch(gasUrl, {
           method: 'POST',
@@ -565,11 +639,15 @@
         });
         const data = await res.json();
         if (data.status === 'success') {
+          if (data.folderUrl) {
+            driveFolderUrl = data.folderUrl;
+            updateCloudStatusUI();
+          }
           wardrobe = data.items;
           outfits = data.outfits;
           saveLocal();
           refreshAllUI();
-          showBanner('✅ 雲端資料庫同步完成！', 3000);
+          showBanner('✅ 雲端硬碟專區與資料庫同步完成！', 3000);
         }
       } catch (e) {
         console.error('雲端同步失敗:', e);
@@ -577,24 +655,27 @@
       }
     }
 
-    // 從雲端讀取最新資料庫
     async function syncFromCloud(showAlert) {
       if (!gasUrl) return;
-      showBanner('🔄 正在從 Google 雲端資料庫讀取最新衣物與穿搭...');
+      showBanner('🔄 正在從 Google 雲端硬碟專區讀取最新衣物...');
       try {
         const res = await fetch(gasUrl);
         const data = await res.json();
         if (data.status === 'success') {
+          if (data.folderUrl) {
+            driveFolderUrl = data.folderUrl;
+            updateCloudStatusUI();
+          }
           wardrobe = data.items || [];
           outfits = data.outfits || [];
           saveLocal();
           refreshAllUI();
-          showBanner('✅ 已與 Google 雲端資料庫完成同步（共 ' + wardrobe.length + ' 件單品）', 3000);
-          if (showAlert) alert('✅ 已從 Google 試算表同步最新衣櫥資料！');
+          showBanner('✅ 已從雲端專區完成同步（共 ' + wardrobe.length + ' 件單品）', 3000);
+          if (showAlert) alert('✅ 已從 Google 雲端硬碟專區同步最新衣櫥資料！');
         }
       } catch (e) {
         console.error('雲端讀取失敗:', e);
-        showBanner('⚠️ 無法讀取雲端資料庫，請確認 Apps Script 部署權限已設為「所有人」。', 5000);
+        showBanner('⚠️ 無法讀取雲端專區，請確認 Apps Script 部署權限已設為「所有人」。', 5000);
       }
     }
 
@@ -729,7 +810,10 @@
           <div>
             <div class="relative h-28 rounded-lg bg-white border border-[#DCE1EE]/60 flex items-center justify-center overflow-hidden mb-2">
               <img src="${item.image}" alt="${item.name}" class="max-h-full max-w-full object-contain transition group-hover:scale-105">
-              <button onclick="deleteWardrobeItem('${item.id}')" class="opacity-0 group-hover:opacity-100 absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/90 text-rose-500 border border-rose-100 text-xs flex items-center justify-center shadow-xs transition" title="刪除單品">✕</button>
+              <div class="opacity-0 group-hover:opacity-100 absolute top-1.5 right-1.5 flex items-center gap-1 transition">
+                <button onclick="openEditItemModal('${item.id}')" class="w-6 h-6 rounded-full bg-white/95 text-[#5C76A8] border border-[#DCE1EE] text-xs flex items-center justify-center shadow-xs hover:bg-[#EAE6F3]" title="調整去背強度 / 橡皮擦微調">🪄</button>
+                <button onclick="deleteWardrobeItem('${item.id}')" class="w-6 h-6 rounded-full bg-white/95 text-rose-500 border border-rose-100 text-xs flex items-center justify-center shadow-xs hover:bg-rose-50" title="刪除單品">✕</button>
+              </div>
             </div>
             <div class="text-xs font-semibold text-[#2C3244] truncate" title="${item.name}">${item.name}</div>
             <div class="flex flex-wrap items-center gap-1 mt-1">
@@ -755,17 +839,64 @@
     }
 
     function openAddModal() {
+      editingItemId = null;
       rawUploadedDataUrl = '';
-      processedUploadedDataUrl = '';
+      isEraserActive = false;
+      updateEraserBtnUI();
+
+      document.getElementById('modalTitle').textContent = '新增衣物單品（智慧去背並存入雲端硬碟專區）';
+      document.getElementById('uploadFileRow').classList.remove('hidden');
       document.getElementById('itemImageInput').value = '';
       document.getElementById('itemNameInput').value = '';
-      document.getElementById('previewProcessedImg').classList.add('hidden');
+      document.getElementById('bgToleranceRange').value = 52;
+      document.getElementById('toleranceValueLabel').textContent = '52';
+      document.getElementById('editPreviewCanvas').classList.add('hidden');
       document.getElementById('previewPlaceholder').classList.remove('hidden');
+      updateCloudStatusUI();
       document.getElementById('addModal').classList.remove('hidden');
+    }
+
+    function openEditItemModal(id) {
+      const item = wardrobe.find(i => i.id === id);
+      if (!item) return;
+      editingItemId = id;
+      isEraserActive = false;
+      updateEraserBtnUI();
+
+      document.getElementById('modalTitle').textContent = `重新調整去背與資訊：${item.name}`;
+      document.getElementById('uploadFileRow').classList.remove('hidden');
+      document.getElementById('itemImageInput').value = '';
+      document.getElementById('itemNameInput').value = item.name;
+      document.getElementById('itemCategoryInput').value = item.category;
+      document.getElementById('itemSubTypeInput').value = item.subType;
+      document.getElementById('itemLengthInput').value = item.length;
+      selectModalColor(item.colorName);
+
+      document.getElementById('bgToleranceRange').value = 58;
+      document.getElementById('toleranceValueLabel').textContent = '58';
+      updateCloudStatusUI();
+      document.getElementById('addModal').classList.remove('hidden');
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const tempC = document.createElement('canvas');
+        tempC.width = img.width;
+        tempC.height = img.height;
+        tempC.getContext('2d').drawImage(img, 0, 0);
+        rawUploadedDataUrl = tempC.toDataURL('image/png');
+        reprocessPreviewImage();
+      };
+      img.onerror = () => {
+        rawUploadedDataUrl = item.image;
+        reprocessPreviewImage();
+      };
+      img.src = item.image;
     }
 
     function closeAddModal() {
       document.getElementById('addModal').classList.add('hidden');
+      editingItemId = null;
     }
 
     function renderModalColorPicker() {
@@ -801,75 +932,269 @@
     function reprocessPreviewImage() {
       if (!rawUploadedDataUrl) return;
       const removeBg = document.getElementById('autoRemoveBgCheck').checked;
+      const tolerance = parseInt(document.getElementById('bgToleranceRange').value, 10) || 52;
+
       const img = new Image();
       img.onload = () => {
-        const maxDim = 480;
+        const maxDim = 520;
         let w = img.width, h = img.height;
         if (w > maxDim || h > maxDim) {
           if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
           else { w = Math.round(w * maxDim / h); h = maxDim; }
         }
-        const canvas = document.createElement('canvas');
+        const canvas = document.getElementById('editPreviewCanvas');
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, w, h);
         ctx.drawImage(img, 0, 0, w, h);
 
         if (removeBg) {
           const imgData = ctx.getImageData(0, 0, w, h);
           const data = imgData.data;
-          const bgR = data[0], bgG = data[1], bgB = data[2];
-          const isLightBg = (bgR > 215 && bgG > 215 && bgB > 215);
-          if (isLightBg) {
-            for (let i = 0; i < data.length; i += 4) {
-              const r = data[i], g = data[i + 1], b = data[i + 2];
-              const diff = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
-              if (diff < 65 && r > 205 && g > 205 && b > 205) {
-                data[i + 3] = 0;
+          const totalPixels = w * h;
+          const visited = new Uint8Array(totalPixels);
+          const isBg = new Uint8Array(totalPixels);
+
+          const corners = [0, w - 1, (h - 1) * w, (h - 1) * w + (w - 1)];
+          let sumR = 0, sumG = 0, sumB = 0, validCorners = 0;
+          corners.forEach(idx => {
+            const p = idx * 4;
+            if (data[p + 3] > 200) {
+              sumR += data[p];
+              sumG += data[p + 1];
+              sumB += data[p + 2];
+              validCorners++;
+            }
+          });
+          const refR = validCorners > 0 ? sumR / validCorners : 240;
+          const refG = validCorners > 0 ? sumG / validCorners : 240;
+          const refB = validCorners > 0 ? sumB / validCorners : 240;
+
+          const queue = new Int32Array(totalPixels);
+          let head = 0, tail = 0;
+
+          function tryEnqueue(x, y) {
+            if (x < 0 || x >= w || y < 0 || y >= h) return;
+            const idx = y * w + x;
+            if (visited[idx]) return;
+            visited[idx] = 1;
+
+            const p = idx * 4;
+            const a = data[p + 3];
+            if (a < 30) {
+              isBg[idx] = 1;
+              queue[tail++] = idx;
+              return;
+            }
+            const r = data[p], g = data[p + 1], b = data[p + 2];
+            const dist = Math.sqrt((r - refR) ** 2 + (g - refG) ** 2 + (b - refB) ** 2);
+            const maxC = Math.max(r, g, b), minC = Math.min(r, g, b);
+            const saturation = maxC - minC;
+
+            if (dist <= tolerance * 1.45 && saturation < 42) {
+              isBg[idx] = 1;
+              queue[tail++] = idx;
+            }
+          }
+
+          for (let x = 0; x < w; x++) {
+            tryEnqueue(x, 0);
+            tryEnqueue(x, h - 1);
+          }
+          for (let y = 0; y < h; y++) {
+            tryEnqueue(0, y);
+            tryEnqueue(w - 1, y);
+          }
+
+          while (head < tail) {
+            const curr = queue[head++];
+            const cx = curr % w;
+            const cy = (curr - cx) / w;
+            tryEnqueue(cx + 1, cy);
+            tryEnqueue(cx - 1, cy);
+            tryEnqueue(cx, cy + 1);
+            tryEnqueue(cx, cy - 1);
+          }
+
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const idx = y * w + x;
+              const p = idx * 4;
+              if (isBg[idx]) {
+                data[p + 3] = 0;
+              } else {
+                let bgNeighbors = 0;
+                if (x > 0 && isBg[idx - 1]) bgNeighbors++;
+                if (x < w - 1 && isBg[idx + 1]) bgNeighbors++;
+                if (y > 0 && isBg[idx - w]) bgNeighbors++;
+                if (y < h - 1 && isBg[idx + w]) bgNeighbors++;
+                if (bgNeighbors >= 2) {
+                  data[p + 3] = Math.round(data[p + 3] * 0.45);
+                } else if (bgNeighbors === 1) {
+                  data[p + 3] = Math.round(data[p + 3] * 0.78);
+                }
               }
             }
-            ctx.putImageData(imgData, 0, 0);
           }
+          ctx.putImageData(imgData, 0, 0);
         }
-        processedUploadedDataUrl = canvas.toDataURL('image/png');
-        const preview = document.getElementById('previewProcessedImg');
-        preview.src = processedUploadedDataUrl;
-        preview.classList.remove('hidden');
+
+        canvas.classList.remove('hidden');
         document.getElementById('previewPlaceholder').classList.add('hidden');
       };
       img.src = rawUploadedDataUrl;
     }
 
+    function toggleEraserMode() {
+      isEraserActive = !isEraserActive;
+      updateEraserBtnUI();
+    }
+
+    function updateEraserBtnUI() {
+      const btn = document.getElementById('eraserToggleBtn');
+      const hint = document.getElementById('eraserHint');
+      const canvas = document.getElementById('editPreviewCanvas');
+      if (isEraserActive) {
+        btn.textContent = '🧹 手動橡皮擦：開（塗抹擦除）';
+        btn.className = 'px-2.5 py-1.5 rounded-lg text-[11px] font-semibold gradient-brand text-white shadow-xs transition';
+        hint.classList.remove('hidden');
+        canvas.style.cursor = 'crosshair';
+      } else {
+        btn.textContent = '🧹 手動橡皮擦：關';
+        btn.className = 'px-2.5 py-1.5 rounded-lg text-[11px] font-medium border border-[#DCE1EE] bg-white text-[#2C3244] hover:bg-[#EAE6F3] transition';
+        hint.classList.add('hidden');
+        canvas.style.cursor = 'default';
+      }
+    }
+
+    function setupEraserEvents() {
+      const canvas = document.getElementById('editPreviewCanvas');
+      function eraseAt(clientX, clientY) {
+        if (!isEraserActive) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (clientX - rect.left) * scaleX;
+        const y = (clientY - rect.top) * scaleY;
+        const ctx = canvas.getContext('2d');
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(x, y, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      canvas.addEventListener('mousedown', (e) => {
+        if (!isEraserActive) return;
+        isDrawingEraser = true;
+        eraseAt(e.clientX, e.clientY);
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (isDrawingEraser) eraseAt(e.clientX, e.clientY);
+      });
+      window.addEventListener('mouseup', () => { isDrawingEraser = false; });
+
+      canvas.addEventListener('touchstart', (e) => {
+        if (!isEraserActive) return;
+        e.preventDefault();
+        isDrawingEraser = true;
+        eraseAt(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: false });
+      canvas.addEventListener('touchmove', (e) => {
+        if (!isDrawingEraser) return;
+        e.preventDefault();
+        eraseAt(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: false });
+      window.addEventListener('touchend', () => { isDrawingEraser = false; });
+    }
+
+    function trimTransparentCanvas(sourceCanvas) {
+      const w = sourceCanvas.width;
+      const h = sourceCanvas.height;
+      const ctx = sourceCanvas.getContext('2d');
+      const data = ctx.getImageData(0, 0, w, h).data;
+
+      let minX = w, minY = h, maxX = 0, maxY = 0;
+      let hasPixel = false;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const alpha = data[(y * w + x) * 4 + 3];
+          if (alpha > 15) {
+            hasPixel = true;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (!hasPixel) return sourceCanvas.toDataURL('image/png');
+
+      const pad = 8;
+      minX = Math.max(0, minX - pad);
+      minY = Math.max(0, minY - pad);
+      maxX = Math.min(w - 1, maxX + pad);
+      maxY = Math.min(h - 1, maxY + pad);
+
+      const trimW = maxX - minX + 1;
+      const trimH = maxY - minY + 1;
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = trimW;
+      outCanvas.height = trimH;
+      outCanvas.getContext('2d').drawImage(sourceCanvas, minX, minY, trimW, trimH, 0, 0, trimW, trimH);
+      return outCanvas.toDataURL('image/png');
+    }
+
     async function confirmAddItem() {
-      if (!processedUploadedDataUrl) {
+      const previewCanvas = document.getElementById('editPreviewCanvas');
+      if (previewCanvas.classList.contains('hidden')) {
         alert('請先上傳衣物照片！');
         return;
       }
+
+      const finalDataUrl = trimTransparentCanvas(previewCanvas);
       const name = document.getElementById('itemNameInput').value.trim() || '未命名單品';
       const category = document.getElementById('itemCategoryInput').value;
       const subType = document.getElementById('itemSubTypeInput').value;
       const length = document.getElementById('itemLengthInput').value;
 
-      const newItem = {
-        id: 'item_' + Date.now(),
-        name,
-        category,
-        subType,
-        length,
-        colorName: selectedModalColor.name,
-        colorHex: selectedModalColor.hex,
-        image: processedUploadedDataUrl,
-        createdAt: new Date().toISOString()
-      };
-
-      wardrobe.unshift(newItem);
-      saveLocal();
-      refreshAllUI();
-      closeAddModal();
-
-      // 若已連結雲端資料庫，立即將圖片上傳至 Google Drive 並寫入 Google 試算表
-      if (gasUrl) {
-        await pushSingleItemToCloud(newItem);
+      if (editingItemId) {
+        const idx = wardrobe.findIndex(i => i.id === editingItemId);
+        if (idx !== -1) {
+          wardrobe[idx] = {
+            ...wardrobe[idx],
+            name,
+            category,
+            subType,
+            length,
+            colorName: selectedModalColor.name,
+            colorHex: selectedModalColor.hex,
+            image: finalDataUrl
+          };
+        }
+        saveLocal();
+        refreshAllUI();
+        closeAddModal();
+        if (gasUrl) await pushAllToCloud();
+      } else {
+        const newItem = {
+          id: 'item_' + Date.now(),
+          name,
+          category,
+          subType,
+          length,
+          colorName: selectedModalColor.name,
+          colorHex: selectedModalColor.hex,
+          image: finalDataUrl,
+          createdAt: new Date().toISOString()
+        };
+        wardrobe.unshift(newItem);
+        saveLocal();
+        refreshAllUI();
+        closeAddModal();
+        if (gasUrl) await pushSingleItemToCloud(newItem);
       }
     }
 
