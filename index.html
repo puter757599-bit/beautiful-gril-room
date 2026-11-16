@@ -423,6 +423,9 @@
   </div>
 
   <script>
+    // ★ 請將下方單引號內的字串替換為您自己的衣櫥 Google Apps Script 部署網址（以 /exec 結尾）
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzq2tC-sLlcgvdVKvoh43lmiQkStWi2xkdRWEF6yzEQzI7xS31vEN9OzNbtGZY76-xp/exec';
+
     const COLOR_PALETTE = [
       { name: '霧霾藍', hex: '#6B88B8' },
       { name: '天青藍', hex: '#8EB8E5' },
@@ -442,7 +445,19 @@
 
     let wardrobe = JSON.parse(localStorage.getItem('atelier_wardrobe_v2') || '[]');
     let outfits = JSON.parse(localStorage.getItem('atelier_outfits_v2') || '[]');
-    let gasUrl = localStorage.getItem('atelier_gas_url') || '';
+
+    // 支援三種來源自動取得雲端網址：1.網址列 ?api= 參數 -> 2.瀏覽器已存紀錄 -> 3.上方預設常數 DEFAULT_GAS_URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramApiUrl = urlParams.get('api');
+    const validDefaultUrl = DEFAULT_GAS_URL.startsWith('https://script.google.com/') ? DEFAULT_GAS_URL : '';
+    let gasUrl = (paramApiUrl && paramApiUrl.startsWith('https://script.google.com/'))
+      ? paramApiUrl
+      : (localStorage.getItem('atelier_gas_url') || validDefaultUrl);
+
+    if (gasUrl) {
+      localStorage.setItem('atelier_gas_url', gasUrl);
+    }
+
     let driveFolderUrl = localStorage.getItem('atelier_drive_folder_url') || '';
 
     let activeCategoryFilter = 'ALL';
@@ -582,11 +597,6 @@
       closeCloudModal();
     }
 
-    /**
-     * 安全防覆蓋連線邏輯：
-     * 貼上雲端網址時，一律先從雲端讀取現有資料庫；
-     * 只有當雲端完全為空（0件衣物且0套穿搭）且本機有使用者自建單品（非 s1~s6 預設範例）時，才上傳至雲端。
-     */
     async function saveCloudUrlAndSync() {
       const url = document.getElementById('gasUrlInput').value.trim();
       if (!url.startsWith('https://script.google.com/')) {
@@ -611,18 +621,15 @@
           const cloudOutfits = data.outfits || [];
 
           if (cloudItems.length > 0 || cloudOutfits.length > 0) {
-            // 雲端已有資料：一律以雲端為準，直接載入至本機，絕不覆蓋雲端
             wardrobe = cloudItems;
             outfits = cloudOutfits;
             saveLocal();
             refreshAllUI();
           } else if (localCustomItems.length > 0 || localOutfits.length > 0) {
-            // 雲端為空且本機有使用者自建單品：協助首次初始化上傳
             wardrobe = localCustomItems;
             outfits = localOutfits;
             await pushAllToCloud();
           } else {
-            // 雲端為空且本機只有預設範例：清空範例保持乾淨狀態
             wardrobe = [];
             outfits = [];
             saveLocal();
